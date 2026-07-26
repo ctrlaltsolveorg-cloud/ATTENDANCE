@@ -87,6 +87,15 @@ export default function App() {
   };
 
   useEffect(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      if (window.location.pathname && window.location.pathname !== '/' && !window.location.pathname.endsWith('.html')) {
+        try {
+          window.history.replaceState(null, '', '/');
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
     loadData();
   }, []);
 
