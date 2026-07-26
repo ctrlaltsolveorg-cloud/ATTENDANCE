@@ -2,6 +2,7 @@
   "name": "college-attendance-mobile-app",
   "version": "1.0.0",
   "main": "index.js",
+  "homepage": "https://ctrlaltsolveorg-cloud.github.io/ATTENDANCE",
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -21,7 +22,12 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "build": "expo export -p web",
-    "vercel-build": "expo export -p web"
+    "vercel-build": "expo export -p web",
+    "predeploy": "npm run build && touch dist/.nojekyll && cp dist/index.html dist/404.html",
+    "deploy": "gh-pages -d dist --dotfiles"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
+  }
 }
