@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   FlatList,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Header from '../components/Header';
@@ -32,6 +33,32 @@ export default function DashboardScreen({
       <Header branchInfo={branchInfo} onReset={onResetData} onOpenCloudConfig={onOpenCloudConfig} />
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+
+        {/* Hero Glassmorphic Logo Video Player */}
+        <View style={styles.videoCardContainer}>
+          {Platform.OS === 'web' ? (
+            <video
+              src={require('../../assets/logov.mp4')}
+              autoPlay
+              loop
+              muted
+              playsInline
+              style={{
+                width: '100%',
+                height: 190,
+                borderRadius: 16,
+                objectFit: 'cover',
+                border: '1px solid rgba(99, 102, 241, 0.35)',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+              }}
+            />
+          ) : (
+            <View style={styles.videoFallback}>
+              <Ionicons name="play-circle" size={42} color="#818CF8" />
+              <Text style={styles.videoFallbackText}>Mechatronics Department Logo Video</Text>
+            </View>
+          )}
+        </View>
 
         {/* Quick Action Button */}
         <TouchableOpacity
@@ -174,6 +201,27 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
+  },
+  videoCardContainer: {
+    width: '100%',
+    marginBottom: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#1E293B',
+    borderWidth: 1,
+    borderColor: 'rgba(99, 102, 241, 0.3)',
+  },
+  videoFallback: {
+    height: 180,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#1E293B',
+    gap: 8,
+  },
+  videoFallbackText: {
+    color: '#94A3B8',
+    fontSize: 13,
+    fontWeight: '600',
   },
   statsGrid: {
     flexDirection: 'row',
