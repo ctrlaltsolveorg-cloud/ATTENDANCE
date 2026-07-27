@@ -427,43 +427,6 @@ export default function MarkAttendanceScreen({
             <Text style={[styles.holidayBannerSub, { color: isLight ? '#6B21A8' : '#A78BFA' }]}>
               Students will NOT be marked absent. Attendance percentage is completely exempt for this date.
             </Text>
-            <View style={styles.reasonInputRow}>
-              <Text style={[styles.reasonLabel, { color: isLight ? '#581C87' : '#C4B5FD' }]}>Reason:</Text>
-              {Platform.OS === 'web' ? (
-                <input
-                  type="text"
-                  value={holidayReason}
-                  onChange={(e) => setHolidayReason(e.target.value)}
-                  style={{
-                    backgroundColor: isLight ? '#FFFFFF' : 'rgba(255,255,255,0.1)',
-                    color: isLight ? '#1E1B4B' : '#F8FAFC',
-                    border: isLight ? '1px solid #C084FC' : '1px solid rgba(167, 139, 250, 0.4)',
-                    borderRadius: '6px',
-                    padding: '4px 8px',
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    outline: 'none',
-                    width: '180px',
-                  }}
-                  placeholder="e.g. Sunday / College Festival"
-                />
-              ) : (
-                <TextInput
-                  style={[
-                    styles.reasonInput,
-                    {
-                      backgroundColor: isLight ? '#FFFFFF' : 'rgba(255, 255, 255, 0.1)',
-                      color: isLight ? '#1E1B4B' : '#F8FAFC',
-                      borderColor: isLight ? '#C084FC' : 'rgba(167, 139, 250, 0.4)',
-                    },
-                  ]}
-                  value={holidayReason}
-                  onChangeText={setHolidayReason}
-                  placeholder="Reason (e.g. Sunday / Holiday)"
-                  placeholderTextColor={isLight ? '#7C3AED' : '#94A3B8'}
-                />
-              )}
-            </View>
           </View>
         </View>
       )}
