@@ -494,7 +494,7 @@ export default function MarkAttendanceScreen({
                 {item.name}
               </Text>
 
-              {/* Status Badge */}
+              {/* Status Badge Checkbox */}
               {isHoliday ? (
                 <View style={styles.holidayTagPill}>
                   <Text style={styles.holidayTagPillText}>EXEMPT</Text>
@@ -503,11 +503,19 @@ export default function MarkAttendanceScreen({
                 <View
                   style={[
                     styles.checkboxSquare,
-                    isPresent ? styles.checkboxChecked : styles.checkboxUnchecked,
+                    isPresent
+                      ? styles.checkboxChecked
+                      : {
+                          backgroundColor: isLight ? '#F1F5F9' : 'rgba(15, 23, 42, 0.8)',
+                          borderColor: isLight ? '#CBD5E1' : '#475569',
+                          borderWidth: 2,
+                        },
                   ]}
                 >
-                  {isPresent && (
+                  {isPresent ? (
                     <Ionicons name="checkmark" size={20} color="#FFFFFF" />
+                  ) : (
+                    <Ionicons name="close" size={14} color={isLight ? '#94A3B8' : '#64748B'} />
                   )}
                 </View>
               )}
