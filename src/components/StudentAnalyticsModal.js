@@ -84,7 +84,7 @@ export default function StudentAnalyticsModal({
             {/* Student Profile Card */}
             <View style={styles.profileCard}>
               <View style={styles.avatarRow}>
-                <View style={[styles.avatarCircle, { borderColor: getPctColor(overallPct) }]}>
+                <View style={[styles.avatarCircle, { borderColor: isFullEligible ? '#10B981' : '#EF4444' }]}>
                   <Text style={styles.avatarText}>
                     {student.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
                   </Text>
