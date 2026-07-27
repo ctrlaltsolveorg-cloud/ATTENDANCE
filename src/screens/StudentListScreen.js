@@ -39,7 +39,7 @@ export default function StudentListScreen({
   };
 
   const handleVerifyPasscode = () => {
-    if (passcodeInput.trim() === '1234') {
+    if (passcodeInput.trim() === '9932123') {
       setPasscodeModalVisible(false);
       setPasscodeError('');
       const action = pendingAction;
@@ -53,7 +53,7 @@ export default function StudentListScreen({
         handleDelete(action.student);
       }
     } else {
-      setPasscodeError('Incorrect Password! Authorized faculty/admin only.');
+      setPasscodeError('Incorrect Password! Access denied.');
     }
   };
 
@@ -257,7 +257,7 @@ export default function StudentListScreen({
 
             <Text style={styles.modalTitle}>Admin Password Required</Text>
             <Text style={styles.passcodeSub}>
-              Editing student records is password protected. Enter Admin PIN (Default: 1234) to proceed:
+              Editing student records is password protected. Enter Admin Password to proceed:
             </Text>
 
             <TextInput
@@ -267,10 +267,9 @@ export default function StudentListScreen({
                 setPasscodeInput(text);
                 setPasscodeError('');
               }}
-              placeholder="Enter Admin PIN (1234)"
+              placeholder="Enter Password"
               placeholderTextColor="#64748B"
               secureTextEntry
-              keyboardType="number-pad"
             />
 
             {passcodeError ? (
