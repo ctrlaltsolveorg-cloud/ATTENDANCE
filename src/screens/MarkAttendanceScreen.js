@@ -512,10 +512,8 @@ export default function MarkAttendanceScreen({
                         },
                   ]}
                 >
-                  {isPresent ? (
+                  {isPresent && (
                     <Ionicons name="checkmark" size={20} color="#FFFFFF" />
-                  ) : (
-                    <Ionicons name="close" size={14} color={isLight ? '#94A3B8' : '#64748B'} />
                   )}
                 </View>
               )}
