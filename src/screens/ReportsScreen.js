@@ -69,7 +69,7 @@ export default function ReportsScreen({ students, subjects, records, stats, onSe
           Mechatronics (M.T.E) • {records.length} Total Sessions Recorded
         </Text>
 
-        {/* Separate Tab Chips with Icons */}
+        {/* Separate Tab Chips with Icons (Order: Student, Analytics, PDF, Shortage) */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -107,21 +107,6 @@ export default function ReportsScreen({ students, subjects, records, stats, onSe
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.tab, selectedTab === 'low' && styles.tabActive]}
-            onPress={() => setSelectedTab('low')}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="alert-circle"
-              size={14}
-              color={selectedTab === 'low' ? '#FFFFFF' : '#EF4444'}
-            />
-            <Text style={[styles.tabText, selectedTab === 'low' && styles.tabTextActive]}>
-              Shortage
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
             style={[styles.tab, selectedTab === 'export' && styles.tabActive]}
             onPress={() => setSelectedTab('export')}
             activeOpacity={0.7}
@@ -133,6 +118,21 @@ export default function ReportsScreen({ students, subjects, records, stats, onSe
             />
             <Text style={[styles.tabText, selectedTab === 'export' && styles.tabTextActive]}>
               PDF
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.tab, selectedTab === 'low' && styles.tabActive]}
+            onPress={() => setSelectedTab('low')}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name="alert-circle"
+              size={14}
+              color={selectedTab === 'low' ? '#FFFFFF' : '#EF4444'}
+            />
+            <Text style={[styles.tabText, selectedTab === 'low' && styles.tabTextActive]}>
+              Shortage
             </Text>
           </TouchableOpacity>
         </ScrollView>
