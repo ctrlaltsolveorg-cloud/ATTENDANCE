@@ -226,12 +226,12 @@ export default function DashboardScreen({
               <Text style={[styles.noticeTitle, { color: isLight ? '#3730A3' : '#F8FAFC' }]}>CR Important Announcement</Text>
             </View>
             <TouchableOpacity
-              style={[styles.crEditBtn, { backgroundColor: isLight ? '#E0E7FF' : 'rgba(168, 85, 247, 0.2)', borderColor: isLight ? '#C7D2FE' : 'rgba(168, 85, 247, 0.4)' }]}
+              style={[styles.crEditIconBtn, { backgroundColor: isLight ? '#E0E7FF' : 'rgba(168, 85, 247, 0.2)', borderColor: isLight ? '#C7D2FE' : 'rgba(168, 85, 247, 0.4)' }]}
               onPress={() => triggerProtectedCRAction({ type: 'editNotice' })}
               activeOpacity={0.7}
+              title="Edit Notice"
             >
-              <Ionicons name="lock-closed" size={12} color={isLight ? '#4F46E5' : '#C084FC'} />
-              <Text style={[styles.crEditText, { color: isLight ? '#4F46E5' : '#C084FC' }]}>Edit Notice</Text>
+              <Ionicons name="pencil" size={14} color={isLight ? '#4F46E5' : '#C084FC'} />
             </TouchableOpacity>
           </View>
           <Text style={[styles.noticeContentText, { color: isLight ? '#312E81' : '#E9D5FF' }]}>
@@ -287,19 +287,19 @@ export default function DashboardScreen({
                     </Text>
                   </View>
 
-                  <View style={{ alignItems: 'flex-end', justifyContent: 'space-between', height: '100%' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <View style={[styles.roomPill, { backgroundColor: isLight ? '#FEF3C7' : 'rgba(245, 158, 11, 0.2)', borderColor: isLight ? '#FDE68A' : '#F59E0B' }]}>
                       <Ionicons name="location" size={12} color="#D97706" />
                       <Text style={styles.roomPillText}>Room {item.room}</Text>
                     </View>
 
                     <TouchableOpacity
-                      style={styles.changeRoomBtn}
+                      style={[styles.changeRoomIconBtn, { backgroundColor: isLight ? '#EEF2FF' : 'rgba(15, 23, 42, 0.8)', borderColor: colors.glassBorder }]}
                       onPress={() => triggerProtectedCRAction({ type: 'editRoom', data: { day: todayDayName, index, room: item.room, name: item.name } })}
                       activeOpacity={0.7}
+                      title="Change Room"
                     >
-                      <Ionicons name="create-outline" size={12} color={colors.primary} />
-                      <Text style={[styles.changeRoomText, { color: colors.primary }]}>Change Room</Text>
+                      <Ionicons name="pencil" size={12} color={colors.primary} />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -978,14 +978,20 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
   },
-  changeRoomBtn: {
-    flexDirection: 'row',
+  crEditIconBtn: {
+    width: 26,
+    height: 26,
+    borderRadius: 8,
+    borderWidth: 1,
     alignItems: 'center',
-    gap: 4,
-    marginTop: 8,
+    justifyContent: 'center',
   },
-  changeRoomText: {
-    fontSize: 11,
-    fontWeight: '700',
+  changeRoomIconBtn: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
