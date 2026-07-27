@@ -9,6 +9,7 @@ import {
   Modal,
   Alert,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { getTheme } from '../theme/theme';
 
 export default function StudentListScreen({
