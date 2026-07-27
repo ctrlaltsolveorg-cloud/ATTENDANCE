@@ -87,7 +87,7 @@ export default function ReportsScreen({ students, subjects, records, stats, onSe
               color={selectedTab === 'summary' ? '#FFFFFF' : '#818CF8'}
             />
             <Text style={[styles.tabText, selectedTab === 'summary' && styles.tabTextActive]}>
-              Student Matrix
+              Student
             </Text>
           </TouchableOpacity>
 
@@ -102,7 +102,7 @@ export default function ReportsScreen({ students, subjects, records, stats, onSe
               color={selectedTab === 'analytics' ? '#FFFFFF' : '#818CF8'}
             />
             <Text style={[styles.tabText, selectedTab === 'analytics' && styles.tabTextActive]}>
-              Visual Analytics
+              Analytics
             </Text>
           </TouchableOpacity>
 
@@ -117,7 +117,7 @@ export default function ReportsScreen({ students, subjects, records, stats, onSe
               color={selectedTab === 'low' ? '#FFFFFF' : '#EF4444'}
             />
             <Text style={[styles.tabText, selectedTab === 'low' && styles.tabTextActive]}>
-              Shortage ({stats.lowAttendanceStudents.length})
+              Shortage
             </Text>
           </TouchableOpacity>
 
@@ -132,7 +132,7 @@ export default function ReportsScreen({ students, subjects, records, stats, onSe
               color={selectedTab === 'export' ? '#FFFFFF' : '#10B981'}
             />
             <Text style={[styles.tabText, selectedTab === 'export' && styles.tabTextActive]}>
-              Export PDF/CSV
+              PDF
             </Text>
           </TouchableOpacity>
         </ScrollView>
