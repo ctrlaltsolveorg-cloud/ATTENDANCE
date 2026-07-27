@@ -146,12 +146,11 @@ export default function StudentListScreen({
             {onToggleTheme && (
               <TouchableOpacity
                 style={{
-                  flexDirection: 'row',
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
                   alignItems: 'center',
-                  gap: 4,
-                  paddingHorizontal: 8,
-                  paddingVertical: 5,
-                  borderRadius: 10,
+                  justifyContent: 'center',
                   backgroundColor: isLight ? '#EEF2FF' : 'rgba(168, 85, 247, 0.2)',
                   borderColor: isLight ? '#C7D2FE' : 'rgba(168, 85, 247, 0.4)',
                   borderWidth: 1,
@@ -159,7 +158,7 @@ export default function StudentListScreen({
                 onPress={onToggleTheme}
                 activeOpacity={0.7}
               >
-                <Ionicons name={isLight ? 'sunny' : 'moon'} size={14} color={isLight ? '#4F46E5' : '#C084FC'} />
+                <Ionicons name={isLight ? 'sunny' : 'moon'} size={16} color={isLight ? '#4F46E5' : '#C084FC'} />
               </TouchableOpacity>
             )}
 

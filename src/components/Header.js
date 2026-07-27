@@ -32,12 +32,9 @@ export default function Header({ branchInfo, title, subtitle, onOpenCloudConfig,
             >
               <Ionicons
                 name={isLight ? 'sunny' : 'moon'}
-                size={14}
+                size={16}
                 color={isLight ? '#4F46E5' : '#C084FC'}
               />
-              <Text style={[styles.themeToggleText, { color: isLight ? '#4F46E5' : '#C084FC' }]}>
-                {isLight ? 'Light Academic' : 'Violet Glass'}
-              </Text>
             </TouchableOpacity>
           )}
 
@@ -83,17 +80,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   themeToggleBtn: {
-    flexDirection: 'row',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
+    justifyContent: 'center',
     borderWidth: 1,
-  },
-  themeToggleText: {
-    fontSize: 11,
-    fontWeight: '800',
   },
   cloudBadge: {
     flexDirection: 'row',
