@@ -34,13 +34,20 @@ const formatDisplayDate = (dateString) => {
   });
 };
 
+import { getTheme } from '../theme/theme';
+
 export default function MarkAttendanceScreen({
   students,
   subjects,
   records = [],
   onSaveSession,
   onCancel,
+  themeMode = 'light',
+  onToggleTheme,
 }) {
+  const currentTheme = getTheme(themeMode);
+  const colors = currentTheme.colors;
+  const isLight = themeMode === 'light';
   const [selectedSubjectId, setSelectedSubjectId] = useState(subjects[0]?.id || '');
   const [dateStr, setDateStr] = useState(getTodayDateString);
   const [searchQuery, setSearchQuery] = useState('');
@@ -189,24 +196,46 @@ export default function MarkAttendanceScreen({
   const selectedSubject = subjects.find((s) => s.id === selectedSubjectId);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.bgDark }]}>
       {/* Top Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.headerBg, borderBottomColor: colors.headerBorder }]}>
         <View style={styles.headerTitleRow}>
-          <Text style={styles.headerTitle}>Mark Attendance</Text>
-          <View style={[styles.counterBadge, isHoliday && styles.counterBadgeHoliday]}>
-            <Text style={[styles.counterText, isHoliday && styles.counterTextHoliday]}>
-              {isHoliday ? '🎉 HOLIDAY (Exempt)' : `${presentCount} / ${students.length} Present`}
-            </Text>
+          <Text style={[styles.headerTitle, { color: colors.textMain }]}>Mark Attendance</Text>
+          
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            {onToggleTheme && (
+              <TouchableOpacity
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: isLight ? '#EEF2FF' : 'rgba(168, 85, 247, 0.2)',
+                  borderColor: isLight ? '#C7D2FE' : 'rgba(168, 85, 247, 0.4)',
+                  borderWidth: 1,
+                }}
+                onPress={onToggleTheme}
+                activeOpacity={0.7}
+              >
+                <Ionicons name={isLight ? 'sunny' : 'moon'} size={16} color={isLight ? '#4F46E5' : '#C084FC'} />
+              </TouchableOpacity>
+            )}
+
+            <View style={[styles.counterBadge, isHoliday && styles.counterBadgeHoliday]}>
+              <Text style={[styles.counterText, isHoliday && styles.counterTextHoliday]}>
+                {isHoliday ? '🎉 HOLIDAY (Exempt)' : `${presentCount} / ${students.length} Present`}
+              </Text>
+            </View>
           </View>
         </View>
-        <Text style={styles.headerSub}>Mechatronics 3rd Semester • Purnea College of Engg.</Text>
+        <Text style={[styles.headerSub, { color: colors.textSub }]}>Mechatronics 3rd Semester • Purnea College of Engg.</Text>
 
         {/* Interactive Date Selector & Plus/Minus Stepper Buttons */}
-        <View style={styles.dateBar}>
+        <View style={[styles.dateBar, { backgroundColor: colors.bgGlass, borderColor: colors.glassBorder }]}>
           <View style={styles.dateRow}>
-            <Ionicons name="calendar" size={16} color="#818CF8" />
-            <Text style={styles.dateLabel}>Date:</Text>
+            <Ionicons name="calendar" size={16} color={colors.primary} />
+            <Text style={[styles.dateLabel, { color: colors.textSub }]}>Date:</Text>
             
             {Platform.OS === 'web' ? (
               <input
@@ -215,7 +244,7 @@ export default function MarkAttendanceScreen({
                 onChange={(e) => setDateStr(e.target.value)}
                 style={{
                   backgroundColor: 'transparent',
-                  color: '#F8FAFC',
+                  color: colors.textMain,
                   border: 'none',
                   fontSize: '13px',
                   fontWeight: 'bold',
@@ -227,11 +256,11 @@ export default function MarkAttendanceScreen({
               />
             ) : (
               <TextInput
-                style={styles.dateInput}
+                style={[styles.dateInput, { color: colors.textMain }]}
                 value={dateStr}
                 onChangeText={setDateStr}
                 placeholder="YYYY-MM-DD"
-                placeholderTextColor="#64748B"
+                placeholderTextColor={colors.textMuted}
               />
             )}
           </View>
@@ -267,24 +296,30 @@ export default function MarkAttendanceScreen({
       </View>
 
       {/* Subject Select Horizontal Chips */}
-      <View style={styles.subjectSection}>
-        <Text style={styles.sectionLabel}>Select Subject / Lab ({subjects.length}):</Text>
+      <View style={[styles.subjectSection, { backgroundColor: colors.bgCard, borderBottomColor: colors.headerBorder }]}>
+        <Text style={[styles.sectionLabel, { color: colors.textSub }]}>Select Subject / Lab ({subjects.length}):</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsScroll}>
           {subjects.map((sub) => {
             const isSelected = sub.id === selectedSubjectId;
             return (
               <TouchableOpacity
                 key={sub.id}
-                style={[styles.chip, isSelected && styles.chipActive]}
+                style={[
+                  styles.chip,
+                  {
+                    backgroundColor: isSelected ? colors.primary : colors.bgGlass,
+                    borderColor: isSelected ? colors.glassBorderActive : colors.glassBorder,
+                  },
+                ]}
                 onPress={() => setSelectedSubjectId(sub.id)}
                 activeOpacity={0.7}
               >
                 <Ionicons
                   name={sub.icon || 'book-outline'}
                   size={14}
-                  color={isSelected ? '#FFFFFF' : '#94A3B8'}
+                  color={isSelected ? '#FFFFFF' : colors.textSub}
                 />
-                <Text style={[styles.chipText, isSelected && styles.chipTextActive]}>
+                <Text style={[styles.chipText, { color: isSelected ? '#FFFFFF' : colors.textSub }]}>
                   {sub.shortName}
                 </Text>
               </TouchableOpacity>
@@ -292,26 +327,26 @@ export default function MarkAttendanceScreen({
           })}
         </ScrollView>
         {selectedSubject && (
-          <Text style={styles.facultyDetail}>
-            Faculty: <Text style={{ color: '#F8FAFC' }}>{selectedSubject.faculty}</Text> ({selectedSubject.code})
+          <Text style={[styles.facultyDetail, { color: colors.textSub }]}>
+            Faculty: <Text style={{ color: colors.textMain, fontWeight: '700' }}>{selectedSubject.faculty}</Text> ({selectedSubject.code})
           </Text>
         )}
       </View>
 
       {/* Controls & Search */}
       <View style={styles.controlsRow}>
-        <View style={styles.searchBox}>
-          <Ionicons name="search" size={16} color="#64748B" />
+        <View style={[styles.searchBox, { backgroundColor: colors.bgGlass, borderColor: colors.glassBorder }]}>
+          <Ionicons name="search" size={16} color={colors.textMuted} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.textMain }]}
             placeholder="Search Roll No or Name..."
-            placeholderTextColor="#64748B"
+            placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
           {searchQuery ? (
             <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={16} color="#64748B" />
+              <Ionicons name="close-circle" size={16} color={colors.textMuted} />
             </TouchableOpacity>
           ) : null}
         </View>
@@ -401,21 +436,25 @@ export default function MarkAttendanceScreen({
             <TouchableOpacity
               style={[
                 styles.registerRow,
-                isHoliday ? styles.rowHoliday : (isPresent ? styles.rowPresent : styles.rowAbsent),
+                {
+                  backgroundColor: isHoliday ? (isLight ? '#F5F3FF' : 'rgba(107, 33, 168, 0.25)') : (isPresent ? (isLight ? '#ECFDF5' : 'rgba(6, 78, 59, 0.4)') : colors.bgCard),
+                  borderColor: isHoliday ? '#8B5CF6' : (isPresent ? '#10B981' : colors.glassBorder),
+                  boxShadow: colors.cardShadow,
+                },
               ]}
               onPress={() => !isHoliday && toggleAttendance(item.id)}
               disabled={isHoliday}
               activeOpacity={0.7}
             >
               {/* Roll Badge */}
-              <View style={[styles.rollBadge, isHoliday ? styles.rollBadgeHoliday : (isPresent && styles.rollBadgePresent)]}>
-                <Text style={[styles.rollText, isHoliday ? styles.rollTextHoliday : (isPresent && styles.rollTextPresent)]}>
+              <View style={[styles.rollBadge, { backgroundColor: isHoliday ? '#8B5CF6' : (isPresent ? '#10B981' : (isLight ? '#EEF2FF' : 'rgba(15, 23, 42, 0.8)')) }]}>
+                <Text style={[styles.rollText, { color: (isHoliday || isPresent) ? '#FFFFFF' : colors.primary }]}>
                   {item.rollNo}
                 </Text>
               </View>
 
               {/* Student Name */}
-              <Text style={styles.studentName} numberOfLines={1}>
+              <Text style={[styles.studentName, { color: colors.textMain }]} numberOfLines={1}>
                 {item.name}
               </Text>
 
@@ -442,9 +481,9 @@ export default function MarkAttendanceScreen({
       />
 
       {/* Save Floating Bar */}
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { backgroundColor: colors.headerBg, borderTopColor: colors.headerBorder }]}>
         <TouchableOpacity
-          style={[styles.saveBtn, isHoliday && styles.saveBtnHoliday]}
+          style={[styles.saveBtn, { backgroundColor: colors.primary }, isHoliday && styles.saveBtnHoliday]}
           onPress={handleSavePress}
           activeOpacity={0.8}
         >

@@ -111,37 +111,55 @@ export default function ReportsScreen({
           contentContainerStyle={styles.tabContainer}
         >
           <TouchableOpacity
-            style={[styles.tab, selectedTab === 'summary' && styles.tabActive]}
+            style={[
+              styles.tab,
+              {
+                backgroundColor: selectedTab === 'summary' ? colors.primary : colors.bgGlass,
+                borderColor: selectedTab === 'summary' ? colors.glassBorderActive : colors.glassBorder,
+              },
+            ]}
             onPress={() => setSelectedTab('summary')}
             activeOpacity={0.7}
           >
             <Ionicons
               name="grid"
               size={14}
-              color={selectedTab === 'summary' ? '#FFFFFF' : '#818CF8'}
+              color={selectedTab === 'summary' ? '#FFFFFF' : colors.primary}
             />
-            <Text style={[styles.tabText, selectedTab === 'summary' && styles.tabTextActive]}>
+            <Text style={[styles.tabText, { color: selectedTab === 'summary' ? '#FFFFFF' : colors.textSub }]}>
               Student
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.tab, selectedTab === 'analytics' && styles.tabActive]}
+            style={[
+              styles.tab,
+              {
+                backgroundColor: selectedTab === 'analytics' ? colors.primary : colors.bgGlass,
+                borderColor: selectedTab === 'analytics' ? colors.glassBorderActive : colors.glassBorder,
+              },
+            ]}
             onPress={() => setSelectedTab('analytics')}
             activeOpacity={0.7}
           >
             <Ionicons
               name="stats-chart"
               size={14}
-              color={selectedTab === 'analytics' ? '#FFFFFF' : '#818CF8'}
+              color={selectedTab === 'analytics' ? '#FFFFFF' : colors.primary}
             />
-            <Text style={[styles.tabText, selectedTab === 'analytics' && styles.tabTextActive]}>
+            <Text style={[styles.tabText, { color: selectedTab === 'analytics' ? '#FFFFFF' : colors.textSub }]}>
               Analytics
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.tab, selectedTab === 'export' && styles.tabActive]}
+            style={[
+              styles.tab,
+              {
+                backgroundColor: selectedTab === 'export' ? colors.primary : colors.bgGlass,
+                borderColor: selectedTab === 'export' ? colors.glassBorderActive : colors.glassBorder,
+              },
+            ]}
             onPress={() => setSelectedTab('export')}
             activeOpacity={0.7}
           >
@@ -150,13 +168,19 @@ export default function ReportsScreen({
               size={14}
               color={selectedTab === 'export' ? '#FFFFFF' : '#10B981'}
             />
-            <Text style={[styles.tabText, selectedTab === 'export' && styles.tabTextActive]}>
+            <Text style={[styles.tabText, { color: selectedTab === 'export' ? '#FFFFFF' : colors.textSub }]}>
               PDF
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.tab, selectedTab === 'low' && styles.tabActive]}
+            style={[
+              styles.tab,
+              {
+                backgroundColor: selectedTab === 'low' ? colors.primary : colors.bgGlass,
+                borderColor: selectedTab === 'low' ? colors.glassBorderActive : colors.glassBorder,
+              },
+            ]}
             onPress={() => setSelectedTab('low')}
             activeOpacity={0.7}
           >
@@ -165,7 +189,7 @@ export default function ReportsScreen({
               size={14}
               color={selectedTab === 'low' ? '#FFFFFF' : '#EF4444'}
             />
-            <Text style={[styles.tabText, selectedTab === 'low' && styles.tabTextActive]}>
+            <Text style={[styles.tabText, { color: selectedTab === 'low' ? '#FFFFFF' : colors.textSub }]}>
               Shortage
             </Text>
           </TouchableOpacity>
@@ -175,9 +199,9 @@ export default function ReportsScreen({
       <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>
         {selectedTab === 'summary' && (
           <View>
-            <View style={styles.infoBanner}>
-              <Ionicons name="information-circle" size={18} color="#818CF8" />
-              <Text style={styles.infoText}>
+            <View style={[styles.infoBanner, { backgroundColor: isLight ? '#EEF2FF' : 'rgba(99, 102, 241, 0.1)', borderColor: isLight ? '#C7D2FE' : '#6366F1' }]}>
+              <Ionicons name="information-circle" size={18} color={isLight ? '#4F46E5' : '#818CF8'} />
+              <Text style={[styles.infoText, { color: isLight ? '#3730A3' : '#CBD5E1' }]}>
                 Swipe horizontally to view subject-wise attendance percentage for each student.
               </Text>
             </View>
@@ -208,21 +232,24 @@ export default function ReportsScreen({
                       const totalSub = subRecords.length;
                       const attended = subRecords.filter((r) => (r.presentStudentIds || []).includes(stu.id)).length;
                       const subPct = totalSub > 0 ? Math.round((attended / totalSub) * 100) : null;
-                      const subColor = subPct !== null ? getPctColor(subPct) : '#64748B';
+                      const subColor = subPct !== null ? getPctColor(subPct) : colors.textMuted;
 
                       return (
                         <View
                           key={sub.id}
                           style={[
                             styles.subPill,
-                            { borderColor: subPct !== null ? `${subColor}60` : '#334155' },
+                            {
+                              backgroundColor: colors.bgGlass,
+                              borderColor: subPct !== null ? `${subColor}60` : colors.glassBorder,
+                            },
                           ]}
                         >
-                          <Text style={styles.subPillTitle}>{sub.shortName}</Text>
+                          <Text style={[styles.subPillTitle, { color: colors.textSub }]}>{sub.shortName}</Text>
                           <Text style={[styles.subPillPct, { color: subColor }]}>
                             {subPct !== null ? `${subPct}%` : 'N/A'}
                           </Text>
-                          <Text style={styles.subPillCount}>
+                          <Text style={[styles.subPillCount, { color: colors.textMuted }]}>
                             {totalSub === 0 ? '0 class' : `${attended}/${totalSub}`}
                           </Text>
                         </View>
@@ -435,14 +462,20 @@ export default function ReportsScreen({
         {selectedTab === 'export' && (
           <View style={styles.exportContainer}>
             {/* Subject Filter Section for Teachers */}
-            <View style={styles.filterSection}>
-              <Text style={styles.filterTitle}>Select Subject for PDF Register:</Text>
+            <View style={[styles.filterSection, { backgroundColor: colors.bgCard, borderColor: colors.glassBorder }]}>
+              <Text style={[styles.filterTitle, { color: colors.textMain }]}>Select Subject for PDF Register:</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.subFilterScroll}>
                 <TouchableOpacity
-                  style={[styles.filterChip, selectedExportSubject === 'ALL' && styles.filterChipActive]}
+                  style={[
+                    styles.filterChip,
+                    {
+                      backgroundColor: selectedExportSubject === 'ALL' ? colors.primary : colors.bgGlass,
+                      borderColor: selectedExportSubject === 'ALL' ? colors.glassBorderActive : colors.glassBorder,
+                    },
+                  ]}
                   onPress={() => setSelectedExportSubject('ALL')}
                 >
-                  <Text style={[styles.filterChipText, selectedExportSubject === 'ALL' && styles.filterChipTextActive]}>
+                  <Text style={[styles.filterChipText, { color: selectedExportSubject === 'ALL' ? '#FFFFFF' : colors.textSub }]}>
                     All Subjects Combined
                   </Text>
                 </TouchableOpacity>
@@ -450,10 +483,16 @@ export default function ReportsScreen({
                 {subjects.map((sub) => (
                   <TouchableOpacity
                     key={sub.id}
-                    style={[styles.filterChip, selectedExportSubject === sub.id && styles.filterChipActive]}
+                    style={[
+                      styles.filterChip,
+                      {
+                        backgroundColor: selectedExportSubject === sub.id ? colors.primary : colors.bgGlass,
+                        borderColor: selectedExportSubject === sub.id ? colors.glassBorderActive : colors.glassBorder,
+                      },
+                    ]}
                     onPress={() => setSelectedExportSubject(sub.id)}
                   >
-                    <Text style={[styles.filterChipText, selectedExportSubject === sub.id && styles.filterChipTextActive]}>
+                    <Text style={[styles.filterChipText, { color: selectedExportSubject === sub.id ? '#FFFFFF' : colors.textSub }]}>
                       {sub.shortName}
                     </Text>
                   </TouchableOpacity>
@@ -462,22 +501,22 @@ export default function ReportsScreen({
             </View>
 
             {/* PDF Attendance Register Export Card */}
-            <View style={[styles.exportCard, { marginBottom: 16, borderColor: '#6366F1', borderWidth: 1 }]}>
-              <View style={styles.iconCircle}>
-                <Ionicons name="print-outline" size={32} color="#818CF8" />
+            <View style={[styles.exportCard, { backgroundColor: colors.bgCard, borderColor: colors.glassBorder, boxShadow: colors.cardShadow, marginBottom: 16 }]}>
+              <View style={[styles.iconCircle, { backgroundColor: isLight ? 'rgba(79, 70, 229, 0.1)' : 'rgba(168, 85, 247, 0.15)' }]}>
+                <Ionicons name="print-outline" size={32} color={colors.primary} />
               </View>
-              <Text style={styles.exportTitle}>
+              <Text style={[styles.exportTitle, { color: colors.textMain }]}>
                 {selectedExportSubject === 'ALL'
                   ? 'All Subjects PDF Register'
                   : `${subjects.find((s) => s.id === selectedExportSubject)?.name || 'Subject'} PDF Register`}
               </Text>
-              <Text style={styles.exportSub}>
+              <Text style={[styles.exportSub, { color: colors.textSub }]}>
                 {selectedExportSubject === 'ALL'
                   ? 'Generate a full college attendance register showing all subjects month-by-month on separate pages.'
                   : `Generate a dedicated monthly attendance register for ${subjects.find((s) => s.id === selectedExportSubject)?.name} (${subjects.find((s) => s.id === selectedExportSubject)?.faculty || 'Faculty'}). Each month will be printed on a separate page!`}
               </Text>
 
-              <TouchableOpacity style={styles.exportBtnPdf} onPress={handlePrintPDF} activeOpacity={0.8}>
+              <TouchableOpacity style={[styles.exportBtnPdf, { backgroundColor: colors.primary }]} onPress={handlePrintPDF} activeOpacity={0.8}>
                 <Ionicons name="print-outline" size={20} color="#FFFFFF" />
                 <Text style={styles.exportBtnText}>
                   {selectedExportSubject === 'ALL' ? 'Print PDF Register (All Subjects)' : `Print ${subjects.find((s) => s.id === selectedExportSubject)?.shortName} PDF Register`}
@@ -486,12 +525,12 @@ export default function ReportsScreen({
             </View>
 
             {/* Excel / CSV Export Card */}
-            <View style={styles.exportCard}>
+            <View style={[styles.exportCard, { backgroundColor: colors.bgCard, borderColor: colors.glassBorder, boxShadow: colors.cardShadow }]}>
               <View style={[styles.iconCircle, { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
                 <Ionicons name="stats-chart-outline" size={32} color="#10B981" />
               </View>
-              <Text style={styles.exportTitle}>Excel / CSV Data Export</Text>
-              <Text style={styles.exportSub}>
+              <Text style={[styles.exportTitle, { color: colors.textMain }]}>Excel / CSV Data Export</Text>
+              <Text style={[styles.exportSub, { color: colors.textSub }]}>
                 Generate formatted Excel spreadsheet (.csv) containing student roll numbers, names, and subject-wise attendance percentages for Microsoft Excel.
               </Text>
 
