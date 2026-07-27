@@ -208,6 +208,14 @@ export default function StudentListScreen({
                 </View>
                 <View style={styles.infoCol}>
                   <Text style={[styles.studentName, { color: colors.textMain }]}>{item.name}</Text>
+                  <Text style={{ fontSize: 11, color: colors.textSub, marginTop: 2 }}>
+                    Reg: {item.regNo || '-'} • BEU Roll: {item.univRoll || '-'}
+                  </Text>
+                  {item.fatherName ? (
+                    <Text style={{ fontSize: 10, color: colors.textMuted, marginTop: 1 }} numberOfLines={1}>
+                      F: {item.fatherName} • M: {item.motherName}
+                    </Text>
+                  ) : null}
                 </View>
               </TouchableOpacity>
 
