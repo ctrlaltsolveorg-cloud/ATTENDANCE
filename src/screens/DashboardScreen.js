@@ -178,14 +178,14 @@ export default function DashboardScreen({
 
         {/* Recent Attendance Sessions History */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recent Attendance Logs</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Recent Attendance Logs</Text>
         </View>
 
         {records.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Ionicons name="calendar-outline" size={32} color="#64748B" />
-            <Text style={styles.emptyTitle}>No Attendance Recorded Yet</Text>
-            <Text style={styles.emptySub}>Tap "Mark Attendance Now" to take today's roll call.</Text>
+          <View style={[styles.emptyCard, { backgroundColor: colors.bgCard, borderColor: colors.glassBorder, boxShadow: colors.cardShadow }]}>
+            <Ionicons name="calendar-outline" size={32} color={colors.textMuted} />
+            <Text style={[styles.emptyTitle, { color: colors.textMain }]}>No Attendance Recorded Yet</Text>
+            <Text style={[styles.emptySub, { color: colors.textSub }]}>Tap "Mark Attendance Now" to take today's roll call.</Text>
           </View>
         ) : (
           records.slice(0, 5).map((rec) => {
@@ -195,7 +195,7 @@ export default function DashboardScreen({
             const pct = Math.round((presentCount / (rec.totalStudents || 30)) * 100);
 
             return (
-              <View key={rec.id} style={styles.historyItem}>
+              <View key={rec.id} style={[styles.historyItem, { backgroundColor: colors.bgCard, borderColor: colors.glassBorder, boxShadow: colors.cardShadow }]}>
                 <View style={[styles.historyIcon, isHoliday && { backgroundColor: 'rgba(139, 92, 246, 0.15)' }]}>
                   <Ionicons
                     name={isHoliday ? "sparkles" : "checkmark-circle"}
@@ -204,13 +204,13 @@ export default function DashboardScreen({
                   />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.historySubName}>{sub.name} ({sub.code})</Text>
-                  <Text style={styles.historyDate}>
+                  <Text style={[styles.historySubName, { color: colors.textMain }]}>{sub.name} ({sub.code})</Text>
+                  <Text style={[styles.historyDate, { color: colors.textSub }]}>
                     {rec.date} • {isHoliday ? `HOLIDAY (${rec.holidayReason || 'College Closed'})` : (rec.time || 'Class')}
                   </Text>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={[styles.historyCount, isHoliday && { color: '#C4B5FD' }]}>
+                  <Text style={[styles.historyCount, { color: colors.textMain }, isHoliday && { color: colors.primary }]}>
                     {isHoliday ? 'Exempt' : `${presentCount} / ${rec.totalStudents || 30} Present`}
                   </Text>
                   <Text style={[styles.historyPct, { color: isHoliday ? '#8B5CF6' : getPctColor(pct) }]}>

@@ -160,46 +160,46 @@ export default function StudentAnalyticsModal({
 
             {/* Quick Stats Grid */}
             <View style={styles.statsRow}>
-              <View style={styles.statMiniCard}>
-                <Text style={styles.statMiniNum}>{totalAttendedAll}</Text>
-                <Text style={styles.statMiniLabel}>Classes Attended</Text>
+              <View style={[styles.statMiniCard, { backgroundColor: colors.bgCard, borderColor: colors.glassBorder }]}>
+                <Text style={[styles.statMiniNum, { color: colors.textMain }]}>{totalAttendedAll}</Text>
+                <Text style={[styles.statMiniLabel, { color: colors.textSub }]}>Classes Attended</Text>
               </View>
-              <View style={styles.statMiniCard}>
-                <Text style={styles.statMiniNum}>{totalHeldAll}</Text>
-                <Text style={styles.statMiniLabel}>Total Held</Text>
+              <View style={[styles.statMiniCard, { backgroundColor: colors.bgCard, borderColor: colors.glassBorder }]}>
+                <Text style={[styles.statMiniNum, { color: colors.textMain }]}>{totalHeldAll}</Text>
+                <Text style={[styles.statMiniLabel, { color: colors.textSub }]}>Total Held</Text>
               </View>
-              <View style={styles.statMiniCard}>
-                <Text style={[styles.statMiniNum, { color: '#C4B5FD' }]}>{totalHolidaysExempt}</Text>
-                <Text style={styles.statMiniLabel}>Holidays Exempt</Text>
+              <View style={[styles.statMiniCard, { backgroundColor: colors.bgCard, borderColor: colors.glassBorder }]}>
+                <Text style={[styles.statMiniNum, { color: colors.primary }]}>{totalHolidaysExempt}</Text>
+                <Text style={[styles.statMiniLabel, { color: colors.textSub }]}>Holidays Exempt</Text>
               </View>
             </View>
 
             {/* Subject-Wise Graphical Chart Section */}
-            <View style={styles.chartSection}>
+            <View style={[styles.chartSection, { backgroundColor: colors.bgCard, borderColor: colors.glassBorder }]}>
               <View style={styles.sectionTitleRow}>
-                <Ionicons name="bar-chart-outline" size={18} color="#818CF8" />
-                <Text style={styles.sectionTitleText}>Subject-Wise Attendance Graphical Analysis</Text>
+                <Ionicons name="bar-chart-outline" size={18} color={colors.primary} />
+                <Text style={[styles.sectionTitleText, { color: colors.textMain }]}>Subject-Wise Attendance Graphical Analysis</Text>
               </View>
-              <Text style={styles.sectionSubText}>All 11 Mechatronics BEU Syllabus Subjects & Labs</Text>
+              <Text style={[styles.sectionSubText, { color: colors.textSub }]}>All 11 Mechatronics BEU Syllabus Subjects & Labs</Text>
 
               {/* Combined 11-Subject Histogram Chart Diagram */}
-              <View style={styles.histogramCard}>
+              <View style={[styles.histogramCard, { backgroundColor: colors.bgGlass, borderColor: colors.glassBorder }]}>
                 <View style={styles.histogramHeader}>
-                  <Ionicons name="analytics" size={18} color="#818CF8" />
-                  <Text style={styles.histogramTitle}>Combined 11-Subject Attendance Histogram Diagram</Text>
+                  <Ionicons name="analytics" size={18} color={colors.primary} />
+                  <Text style={[styles.histogramTitle, { color: colors.textMain }]}>Combined 11-Subject Attendance Histogram Diagram</Text>
                 </View>
-                <Text style={styles.histogramSub}>Unified side-by-side comparative histogram chart for all subjects:</Text>
+                <Text style={[styles.histogramSub, { color: colors.textSub }]}>Unified side-by-side comparative histogram chart for all subjects:</Text>
 
-                <View style={styles.histogramContainer}>
+                <View style={[styles.histogramContainer, { backgroundColor: isLight ? '#F1F5F9' : 'rgba(15, 23, 42, 0.6)', borderColor: colors.glassBorder }]}>
                   {/* Guideline Overlay */}
                   <View style={styles.yAxisLine100}>
-                    <Text style={styles.yAxisLabel}>100%</Text>
+                    <Text style={[styles.yAxisLabel, { color: colors.textMuted }]}>100%</Text>
                   </View>
                   <View style={styles.yAxisLine75}>
                     <Text style={styles.yAxisLabel75}>75% Target Line</Text>
                   </View>
                   <View style={styles.yAxisLine50}>
-                    <Text style={styles.yAxisLabel}>50%</Text>
+                    <Text style={[styles.yAxisLabel, { color: colors.textMuted }]}>50%</Text>
                   </View>
 
                   {/* Unified Bar Histogram */}
@@ -226,10 +226,10 @@ export default function StudentAnalyticsModal({
                             />
                           </View>
 
-                          <Text style={styles.xBarCode} numberOfLines={1}>
+                          <Text style={[styles.xBarCode, { color: colors.textMain }]} numberOfLines={1}>
                             {sub.shortName}
                           </Text>
-                          <Text style={styles.xBarDetail}>
+                          <Text style={[styles.xBarDetail, { color: colors.textMuted }]}>
                             {sub.attended}/{sub.totalHeld}
                           </Text>
                         </View>
@@ -246,11 +246,11 @@ export default function StudentAnalyticsModal({
                   const fillPct = sub.percentage !== null ? sub.percentage : 0;
 
                   return (
-                    <View key={sub.id} style={styles.graphBarRow}>
+                    <View key={sub.id} style={[styles.graphBarRow, { backgroundColor: colors.bgGlass, borderColor: colors.glassBorder }]}>
                       <View style={styles.graphBarHeader}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                          <Ionicons name={sub.icon || 'book-outline'} size={14} color="#818CF8" />
-                          <Text style={styles.graphSubName}>{sub.name} ({sub.shortName})</Text>
+                          <Ionicons name={sub.icon || 'book-outline'} size={14} color={colors.primary} />
+                          <Text style={[styles.graphSubName, { color: colors.textMain }]}>{sub.name} ({sub.shortName})</Text>
                         </View>
                         <Text style={[styles.graphPctText, { color: barColor }]}>
                           {sub.percentage !== null ? `${sub.percentage}%` : 'N/A'}
@@ -258,7 +258,7 @@ export default function StudentAnalyticsModal({
                       </View>
 
                       {/* Visual Bar Track */}
-                      <View style={styles.barTrack}>
+                      <View style={[styles.barTrack, { backgroundColor: isLight ? '#E2E8F0' : 'rgba(15, 23, 42, 0.8)' }]}>
                         <View
                           style={[
                             styles.barFill,

@@ -237,12 +237,12 @@ export default function ReportsScreen({
 
         {selectedTab === 'low' && (
           <View>
-            <Text style={styles.sectionHeader}>{"Subject-Wise Detained Papers Shortage List (< 75%)"}</Text>
+            <Text style={[styles.sectionHeader, { color: colors.textMain }]}>{"Subject-Wise Detained Papers Shortage List (< 75%)"}</Text>
             {(!stats?.lowAttendanceStudents || stats.lowAttendanceStudents.length === 0) ? (
-              <View style={styles.emptyCard}>
+              <View style={[styles.emptyCard, { backgroundColor: colors.bgCard, borderColor: colors.glassBorder, boxShadow: colors.cardShadow }]}>
                 <Ionicons name="checkmark-circle" size={40} color="#10B981" />
-                <Text style={styles.emptyTitle}>All Clear!</Text>
-                <Text style={styles.emptySub}>
+                <Text style={[styles.emptyTitle, { color: colors.textMain }]}>All Clear!</Text>
+                <Text style={[styles.emptySub, { color: colors.textSub }]}>
                   No students are currently detained in any subject paper. Everyone is above 75% in all subjects.
                 </Text>
               </View>
@@ -250,14 +250,14 @@ export default function ReportsScreen({
               stats.lowAttendanceStudents.map((stu) => (
                 <TouchableOpacity
                   key={stu.id}
-                  style={styles.lowCard}
+                  style={[styles.lowCard, { backgroundColor: colors.bgCard, borderColor: colors.glassBorder, boxShadow: colors.cardShadow }]}
                   onPress={() => onSelectStudent && onSelectStudent(stu)}
                   activeOpacity={0.7}
                 >
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                      <Text style={styles.lowName}>{stu.name}</Text>
-                      <Text style={styles.lowRoll}>{stu.rollNo}</Text>
+                      <Text style={[styles.lowName, { color: colors.textMain }]}>{stu.name}</Text>
+                      <Text style={[styles.lowRoll, { color: colors.primary }]}>{stu.rollNo}</Text>
                     </View>
                     <Text style={{ color: '#EF4444', fontSize: 12, fontWeight: '700', marginBottom: 4 }}>
                       Detained in {stu.detainedCount} Paper(s):
@@ -281,25 +281,25 @@ export default function ReportsScreen({
         {selectedTab === 'analytics' && (
           <View style={styles.analyticsTabContainer}>
             {/* Subject-Wise Exam Eligibility Summary */}
-            <View style={styles.chartCard}>
+            <View style={[styles.chartCard, { backgroundColor: colors.bgCard, borderColor: colors.glassBorder, boxShadow: colors.cardShadow }]}>
               <View style={styles.chartCardHeader}>
-                <Ionicons name="shield-checkmark" size={20} color="#818CF8" />
-                <Text style={styles.chartCardTitle}>BEU Subject-Wise Exam Eligibility Status</Text>
+                <Ionicons name="shield-checkmark" size={20} color={colors.primary} />
+                <Text style={[styles.chartCardTitle, { color: colors.textMain }]}>BEU Subject-Wise Exam Eligibility Status</Text>
               </View>
               
               <View style={styles.overviewRingRow}>
-                <View style={styles.ringBadge}>
-                  <Text style={styles.ringNum}>{students.length - (stats?.lowAttendanceStudents?.length || 0)}</Text>
-                  <Text style={styles.ringSub}>All Pass</Text>
+                <View style={[styles.ringBadge, { backgroundColor: isLight ? 'rgba(79, 70, 229, 0.1)' : 'rgba(168, 85, 247, 0.15)', borderColor: colors.primary }]}>
+                  <Text style={[styles.ringNum, { color: colors.primary }]}>{students.length - (stats?.lowAttendanceStudents?.length || 0)}</Text>
+                  <Text style={[styles.ringSub, { color: colors.textSub }]}>All Pass</Text>
                 </View>
                 <View style={{ flex: 1, gap: 6 }}>
-                  <Text style={styles.overviewText}>
-                    • <Text style={{ color: '#F8FAFC', fontWeight: '700' }}>{students.length}</Text> Registered Mechatronics Students
+                  <Text style={[styles.overviewText, { color: colors.textSub }]}>
+                    • <Text style={{ color: colors.textMain, fontWeight: '700' }}>{students.length}</Text> Registered Mechatronics Students
                   </Text>
-                  <Text style={styles.overviewText}>
+                  <Text style={[styles.overviewText, { color: colors.textSub }]}>
                     • <Text style={{ color: '#10B981', fontWeight: '700' }}>{students.length - (stats?.lowAttendanceStudents?.length || 0)}</Text> Eligible in ALL 11 Subjects
                   </Text>
-                  <Text style={styles.overviewText}>
+                  <Text style={[styles.overviewText, { color: colors.textSub }]}>
                     • <Text style={{ color: '#EF4444', fontWeight: '700' }}>{stats?.lowAttendanceStudents?.length || 0}</Text> Students Detained in 1 or more papers (&lt; 75%)
                   </Text>
                 </View>
@@ -307,23 +307,23 @@ export default function ReportsScreen({
             </View>
 
             {/* Subject-Wise Class Average Graphical Bar Chart */}
-            <View style={styles.chartCard}>
+            <View style={[styles.chartCard, { backgroundColor: colors.bgCard, borderColor: colors.glassBorder, boxShadow: colors.cardShadow }]}>
               <View style={styles.chartCardHeader}>
-                <Ionicons name="analytics" size={20} color="#818CF8" />
-                <Text style={styles.chartCardTitle}>Class-Wide 11-Subject Combined Histogram Diagram</Text>
+                <Ionicons name="analytics" size={20} color={colors.primary} />
+                <Text style={[styles.chartCardTitle, { color: colors.textMain }]}>Class-Wide 11-Subject Combined Histogram Diagram</Text>
               </View>
-              <Text style={styles.chartSub}>Combined comparative histogram chart for all 11 Mechatronics subjects & labs:</Text>
+              <Text style={[styles.chartSub, { color: colors.textSub }]}>Combined comparative histogram chart for all 11 Mechatronics subjects & labs:</Text>
 
-              <View style={styles.histogramContainer}>
+              <View style={[styles.histogramContainer, { backgroundColor: colors.bgGlass, borderColor: colors.glassBorder }]}>
                 {/* Guidelines */}
                 <View style={styles.yAxisLine100}>
-                  <Text style={styles.yAxisLabel}>100%</Text>
+                  <Text style={[styles.yAxisLabel, { color: colors.textMuted }]}>100%</Text>
                 </View>
                 <View style={styles.yAxisLine75}>
                   <Text style={styles.yAxisLabel75}>75% Target Line</Text>
                 </View>
                 <View style={styles.yAxisLine50}>
-                  <Text style={styles.yAxisLabel}>50%</Text>
+                  <Text style={[styles.yAxisLabel, { color: colors.textMuted }]}>50%</Text>
                 </View>
 
                 {/* Bars Scroll */}
@@ -351,10 +351,10 @@ export default function ReportsScreen({
                           />
                         </View>
 
-                        <Text style={styles.xBarCode} numberOfLines={1}>
+                        <Text style={[styles.xBarCode, { color: colors.textMain }]} numberOfLines={1}>
                           {sub.shortName}
                         </Text>
-                        <Text style={styles.xBarDetail}>
+                        <Text style={[styles.xBarDetail, { color: colors.textMuted }]}>
                           {subStat.sessions} sess
                         </Text>
                       </View>
@@ -365,12 +365,12 @@ export default function ReportsScreen({
             </View>
 
             {/* Subject Breakdown List */}
-            <View style={styles.chartCard}>
+            <View style={[styles.chartCard, { backgroundColor: colors.bgCard, borderColor: colors.glassBorder, boxShadow: colors.cardShadow }]}>
               <View style={styles.chartCardHeader}>
-                <Ionicons name="stats-chart" size={20} color="#6366F1" />
-                <Text style={styles.chartCardTitle}>Subject-Wise Class Performance</Text>
+                <Ionicons name="stats-chart" size={20} color={colors.primary} />
+                <Text style={[styles.chartCardTitle, { color: colors.textMain }]}>Subject-Wise Class Performance</Text>
               </View>
-              <Text style={styles.chartSub}>Class average attendance percentage per subject:</Text>
+              <Text style={[styles.chartSub, { color: colors.textSub }]}>Class average attendance percentage per subject:</Text>
 
               <View style={{ gap: 12, marginTop: 12 }}>
                 {subjects.map((sub) => {
@@ -379,15 +379,15 @@ export default function ReportsScreen({
                   const barColor = getPctColor(pct);
 
                   return (
-                    <View key={sub.id} style={styles.subjectGraphRow}>
+                    <View key={sub.id} style={[styles.subjectGraphRow, { backgroundColor: colors.bgGlass, borderColor: colors.glassBorder }]}>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-                        <Text style={styles.subGraphName}>{sub.name} ({sub.shortName})</Text>
+                        <Text style={[styles.subGraphName, { color: colors.textMain }]}>{sub.name} ({sub.shortName})</Text>
                         <Text style={[styles.subGraphPct, { color: barColor }]}>{pct}%</Text>
                       </View>
-                      <View style={styles.graphBarTrack}>
+                      <View style={[styles.graphBarTrack, { backgroundColor: isLight ? '#E2E8F0' : 'rgba(15, 23, 42, 0.8)' }]}>
                         <View style={[styles.graphBarFill, { width: `${pct}%`, backgroundColor: barColor }]} />
                       </View>
-                      <Text style={styles.subGraphSub}>
+                      <Text style={[styles.subGraphSub, { color: colors.textSub }]}>
                         {subStat.sessions === 0 ? 'No classes held' : `${subStat.sessions} sessions held • Faculty: ${sub.faculty || 'Dept'}`}
                       </Text>
                     </View>
@@ -397,12 +397,12 @@ export default function ReportsScreen({
             </View>
 
             {/* Clickable Roster List for Individual Graph Inspection */}
-            <View style={styles.chartCard}>
+            <View style={[styles.chartCard, { backgroundColor: colors.bgCard, borderColor: colors.glassBorder, boxShadow: colors.cardShadow }]}>
               <View style={styles.chartCardHeader}>
-                <Ionicons name="people" size={20} color="#818CF8" />
-                <Text style={styles.chartCardTitle}>Student Graphical Analytics Roster</Text>
+                <Ionicons name="people" size={20} color={colors.primary} />
+                <Text style={[styles.chartCardTitle, { color: colors.textMain }]}>Student Graphical Analytics Roster</Text>
               </View>
-              <Text style={styles.chartSub}>Tap any student below to open their full graph & profile:</Text>
+              <Text style={[styles.chartSub, { color: colors.textSub }]}>Tap any student below to open their full graph & profile:</Text>
 
               <View style={{ gap: 8, marginTop: 12 }}>
                 {students.map((stu) => {
@@ -413,17 +413,16 @@ export default function ReportsScreen({
                   return (
                     <TouchableOpacity
                       key={stu.id}
-                      style={styles.rosterGraphItem}
+                      style={[styles.rosterGraphItem, { backgroundColor: colors.bgGlass, borderColor: colors.glassBorder }]}
                       onPress={() => onSelectStudent && onSelectStudent(stu)}
                       activeOpacity={0.7}
                     >
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.rosterName}>{stu.name}</Text>
-                        <Text style={styles.rosterRoll}>{stu.rollNo} • {stuStat.present}/{stuStat.total} classes</Text>
+                      <View>
+                        <Text style={[styles.rosterName, { color: colors.textMain }]}>{stu.name}</Text>
+                        <Text style={[styles.rosterRoll, { color: colors.primary }]}>{stu.rollNo} • Tap for Analytics Graph 📊</Text>
                       </View>
                       <View style={[styles.rosterBadge, { backgroundColor: `${color}20`, borderColor: color }]}>
-                        <Text style={[styles.rosterBadgeText, { color }]}>{pct}%</Text>
-                        <Ionicons name="chevron-forward" size={14} color={color} />
+                        <Text style={[styles.rosterBadgeText, { color }]}>Graph 📈</Text>
                       </View>
                     </TouchableOpacity>
                   );
