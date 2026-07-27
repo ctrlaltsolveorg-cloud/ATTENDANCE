@@ -334,7 +334,6 @@ export default function DashboardScreen({
 
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <View style={[styles.roomPill, { backgroundColor: isLight ? '#FEF3C7' : 'rgba(245, 158, 11, 0.2)', borderColor: isLight ? '#FDE68A' : '#F59E0B' }]}>
-                      <Ionicons name="location" size={12} color="#D97706" />
                       <Text style={styles.roomPillText}>Room {item.room}</Text>
                     </View>
 
