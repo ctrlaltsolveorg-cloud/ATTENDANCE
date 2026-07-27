@@ -273,7 +273,9 @@ export default function DashboardScreen({
           </View>
 
           <View style={{ gap: 10, marginTop: 12 }}>
-            {todayClasses.map((item, index) => {
+            {todayClasses
+              .filter((item) => item.code !== 'RECESS' && item.period !== 'RECESS')
+              .map((item, index) => {
               const status = getPeriodStatus(item.time);
 
               return (
