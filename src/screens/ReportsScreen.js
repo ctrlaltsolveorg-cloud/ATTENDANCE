@@ -12,7 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { generateCSVReport, generatePrintableHTMLRegister } from '../services/storage';
 
-export default function ReportsScreen({ students, subjects, records, stats }) {
+export default function ReportsScreen({ students, subjects, records, stats, onSelectStudent }) {
   const [selectedTab, setSelectedTab] = useState('summary'); // 'summary' | 'low' | 'export'
   const [selectedExportSubject, setSelectedExportSubject] = useState('ALL');
 
@@ -81,11 +81,20 @@ export default function ReportsScreen({ students, subjects, records, stats }) {
           </TouchableOpacity>
 
           <TouchableOpacity
+            style={[styles.tab, selectedTab === 'analytics' && styles.tabActive]}
+            onPress={() => setSelectedTab('analytics')}
+          >
+            <Text style={[styles.tabText, selectedTab === 'analytics' && styles.tabTextActive]}>
+              📊 Visual Analytics
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
             style={[styles.tab, selectedTab === 'low' && styles.tabActive]}
             onPress={() => setSelectedTab('low')}
           >
             <Text style={[styles.tabText, selectedTab === 'low' && styles.tabTextActive]}>
-              Low Attendance ({stats.lowAttendanceStudents.length})
+              Shortage ({stats.lowAttendanceStudents.length})
             </Text>
           </TouchableOpacity>
 
@@ -94,7 +103,7 @@ export default function ReportsScreen({ students, subjects, records, stats }) {
             onPress={() => setSelectedTab('export')}
           >
             <Text style={[styles.tabText, selectedTab === 'export' && styles.tabTextActive]}>
-              Export Data
+              Export PDF/CSV
             </Text>
           </TouchableOpacity>
         </View>
@@ -113,10 +122,17 @@ export default function ReportsScreen({ students, subjects, records, stats }) {
             {students.map((stu) => {
               return (
                 <View key={stu.id} style={styles.studentReportRow}>
-                  <View style={styles.stuRowHeader}>
-                    <Text style={styles.stuName}>{stu.name}</Text>
-                    <Text style={styles.stuRoll}>{stu.rollNo}</Text>
-                  </View>
+                  <TouchableOpacity
+                    style={styles.stuRowHeader}
+                    onPress={() => onSelectStudent && onSelectStudent(stu)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.stuName}>{stu.name}</Text>
+                      <Text style={styles.stuRoll}>{stu.rollNo} • Tap for Bar Chart 📊</Text>
+                    </View>
+                    <Ionicons name="bar-chart" size={16} color="#818CF8" />
+                  </TouchableOpacity>
 
                   {/* Horizontal Scrollable Subject Percentage List */}
                   <ScrollView
@@ -169,22 +185,124 @@ export default function ReportsScreen({ students, subjects, records, stats }) {
               </View>
             ) : (
               stats.lowAttendanceStudents.map((stu) => (
-                <View key={stu.id} style={styles.lowCard}>
+                <TouchableOpacity
+                  key={stu.id}
+                  style={styles.lowCard}
+                  onPress={() => onSelectStudent && onSelectStudent(stu)}
+                  activeOpacity={0.7}
+                >
                   <View style={styles.lowCardLeft}>
                     <Text style={styles.lowRoll}>{stu.rollNo}</Text>
                     <View>
                       <Text style={styles.lowName}>{stu.name}</Text>
                       <Text style={styles.lowSub}>
-                        Attended {stu.present} out of {stu.total} total sessions
+                        Attended {stu.present} of {stu.total} sessions • Tap for Graph 📊
                       </Text>
                     </View>
                   </View>
                   <View style={styles.lowBadge}>
                     <Text style={styles.lowBadgeText}>{stu.percentage}%</Text>
                   </View>
-                </View>
+                </TouchableOpacity>
               ))
             )}
+          </View>
+        )}
+
+        {selectedTab === 'analytics' && (
+          <View style={styles.analyticsTabContainer}>
+            {/* Overall Class Overview Card */}
+            <View style={styles.chartCard}>
+              <View style={styles.chartCardHeader}>
+                <Ionicons name="pie-chart" size={20} color="#818CF8" />
+                <Text style={styles.chartCardTitle}>Class Attendance Overview</Text>
+              </View>
+              
+              <View style={styles.overviewRingRow}>
+                <View style={styles.ringBadge}>
+                  <Text style={styles.ringNum}>{stats.overallPercentage}%</Text>
+                  <Text style={styles.ringSub}>Class Avg</Text>
+                </View>
+                <View style={{ flex: 1, gap: 6 }}>
+                  <Text style={styles.overviewText}>
+                    • <Text style={{ color: '#F8FAFC', fontWeight: '700' }}>{students.length}</Text> Registered Mechatronics Students
+                  </Text>
+                  <Text style={styles.overviewText}>
+                    • <Text style={{ color: '#10B981', fontWeight: '700' }}>{students.length - stats.lowAttendanceStudents.length}</Text> Eligible (>= 75%)
+                  </Text>
+                  <Text style={styles.overviewText}>
+                    • <Text style={{ color: '#EF4444', fontWeight: '700' }}>{stats.lowAttendanceStudents.length}</Text> Attendance Shortage (&lt; 75%)
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Subject-Wise Class Average Graphical Bar Chart */}
+            <View style={styles.chartCard}>
+              <View style={styles.chartCardHeader}>
+                <Ionicons name="stats-chart" size={20} color="#6366F1" />
+                <Text style={styles.chartCardTitle}>Subject-Wise Class Performance</Text>
+              </View>
+              <Text style={styles.chartSub}>Class average attendance percentage per subject:</Text>
+
+              <View style={{ gap: 12, marginTop: 12 }}>
+                {subjects.map((sub) => {
+                  const subStat = stats.subjectStats[sub.id] || { sessions: 0, present: 0, totalPossible: 0 };
+                  const pct = subStat.totalPossible > 0 ? Math.round((subStat.present / subStat.totalPossible) * 100) : 0;
+                  const barColor = getPctColor(pct);
+
+                  return (
+                    <View key={sub.id} style={styles.subjectGraphRow}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <Text style={styles.subGraphName}>{sub.name} ({sub.shortName})</Text>
+                        <Text style={[styles.subGraphPct, { color: barColor }]}>{pct}%</Text>
+                      </View>
+                      <View style={styles.graphBarTrack}>
+                        <View style={[styles.graphBarFill, { width: `${pct}%`, backgroundColor: barColor }]} />
+                      </View>
+                      <Text style={styles.subGraphSub}>
+                        {subStat.sessions === 0 ? 'No classes held' : `${subStat.sessions} sessions held • Faculty: ${sub.faculty || 'Dept'}`}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* Clickable Roster List for Individual Graph Inspection */}
+            <View style={styles.chartCard}>
+              <View style={styles.chartCardHeader}>
+                <Ionicons name="people" size={20} color="#818CF8" />
+                <Text style={styles.chartCardTitle}>Student Graphical Analytics Roster</Text>
+              </View>
+              <Text style={styles.chartSub}>Tap any student below to open their full graph & profile:</Text>
+
+              <View style={{ gap: 8, marginTop: 12 }}>
+                {students.map((stu) => {
+                  const stuStat = stats.studentStats[stu.id] || { present: 0, total: 0 };
+                  const pct = stuStat.total > 0 ? Math.round((stuStat.present / stuStat.total) * 100) : 100;
+                  const color = getPctColor(pct);
+
+                  return (
+                    <TouchableOpacity
+                      key={stu.id}
+                      style={styles.rosterGraphItem}
+                      onPress={() => onSelectStudent && onSelectStudent(stu)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.rosterName}>{stu.name}</Text>
+                        <Text style={styles.rosterRoll}>{stu.rollNo} • {stuStat.present}/{stuStat.total} classes</Text>
+                      </View>
+                      <View style={[styles.rosterBadge, { backgroundColor: `${color}20`, borderColor: color }]}>
+                        <Text style={[styles.rosterBadgeText, { color }]}>{pct}%</Text>
+                        <Ionicons name="chevron-forward" size={14} color={color} />
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
           </View>
         )}
 
@@ -543,5 +661,126 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '700',
     fontSize: 15,
+  },
+  analyticsTabContainer: {
+    gap: 16,
+    paddingVertical: 8,
+  },
+  chartCard: {
+    backgroundColor: '#1E293B',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  chartCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  chartCardTitle: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  chartSub: {
+    color: '#94A3B8',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  overviewRingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginTop: 14,
+  },
+  ringBadge: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(99, 102, 241, 0.15)',
+    borderColor: '#6366F1',
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ringNum: {
+    color: '#818CF8',
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  ringSub: {
+    color: '#94A3B8',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  overviewText: {
+    color: '#94A3B8',
+    fontSize: 13,
+  },
+  subjectGraphRow: {
+    backgroundColor: '#0F172A',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  subGraphName: {
+    color: '#F8FAFC',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  subGraphPct: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  graphBarTrack: {
+    height: 8,
+    backgroundColor: '#1E293B',
+    borderRadius: 4,
+    overflow: 'hidden',
+    width: '100%',
+    marginVertical: 4,
+  },
+  graphBarFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  subGraphSub: {
+    color: '#64748B',
+    fontSize: 11,
+  },
+  rosterGraphItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#0F172A',
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  rosterName: {
+    color: '#F8FAFC',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  rosterRoll: {
+    color: '#94A3B8',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  rosterBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  rosterBadgeText: {
+    fontSize: 13,
+    fontWeight: '800',
   },
 });

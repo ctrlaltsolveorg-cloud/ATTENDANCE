@@ -46,12 +46,14 @@ import MarkAttendanceScreen from './src/screens/MarkAttendanceScreen';
 import StudentListScreen from './src/screens/StudentListScreen';
 import ReportsScreen from './src/screens/ReportsScreen';
 import SupabaseConfigModal from './src/components/SupabaseConfigModal';
+import StudentAnalyticsModal from './src/components/StudentAnalyticsModal';
 
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'mark' | 'students' | 'reports'
   const [initialHoliday, setInitialHoliday] = useState(false);
   const [cloudModalVisible, setCloudModalVisible] = useState(false);
+  const [analyticsStudent, setAnalyticsStudent] = useState(null);
 
   const [branchInfo, setBranchInfo] = useState(null);
   const [students, setStudents] = useState([]);
@@ -181,6 +183,7 @@ export default function App() {
             onNavigate={handleNavigate}
             onResetData={handleResetData}
             onOpenCloudConfig={() => setCloudModalVisible(true)}
+            onSelectStudent={setAnalyticsStudent}
           />
         )}
 
@@ -202,6 +205,7 @@ export default function App() {
             onAddStudent={handleAddStudent}
             onUpdateStudent={handleUpdateStudent}
             onDeleteStudent={handleDeleteStudent}
+            onSelectStudent={setAnalyticsStudent}
           />
         )}
 
@@ -211,6 +215,7 @@ export default function App() {
             subjects={subjects}
             records={records}
             stats={stats}
+            onSelectStudent={setAnalyticsStudent}
           />
         )}
       </View>
@@ -220,6 +225,15 @@ export default function App() {
         visible={cloudModalVisible}
         onClose={() => setCloudModalVisible(false)}
         onRefresh={loadData}
+      />
+
+      {/* Student Graphical Analytics Modal */}
+      <StudentAnalyticsModal
+        visible={Boolean(analyticsStudent)}
+        student={analyticsStudent}
+        subjects={subjects}
+        records={records}
+        onClose={() => setAnalyticsStudent(null)}
       />
 
       {/* Bottom Navigation Tab Bar */}

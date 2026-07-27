@@ -17,6 +17,7 @@ export default function StudentListScreen({
   onAddStudent,
   onUpdateStudent,
   onDeleteStudent,
+  onSelectStudent,
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
@@ -134,7 +135,11 @@ export default function StudentListScreen({
 
           return (
             <View style={styles.card}>
-              <View style={styles.cardLeft}>
+              <TouchableOpacity
+                style={styles.cardLeft}
+                onPress={() => onSelectStudent && onSelectStudent(item)}
+                activeOpacity={0.7}
+              >
                 <View style={styles.rollBadge}>
                   <Text style={styles.rollText}>{item.rollNo}</Text>
                 </View>
@@ -143,11 +148,11 @@ export default function StudentListScreen({
 
                   <View style={styles.statsRow}>
                     <Text style={styles.statLabel}>
-                      Attended: <Text style={{ color: '#F8FAFC', fontWeight: '700' }}>{studentStat.present}</Text> / {studentStat.total}
+                      Attended: <Text style={{ color: '#F8FAFC', fontWeight: '700' }}>{studentStat.present}</Text> / {studentStat.total} • <Ionicons name="bar-chart" size={12} color="#818CF8" /> <Text style={{ color: '#818CF8' }}>Graph</Text>
                     </Text>
                   </View>
                 </View>
-              </View>
+              </TouchableOpacity>
 
               <View style={styles.cardRight}>
                 <View style={[styles.pctBadge, { backgroundColor: `${statusColor}20`, borderColor: statusColor }]}>

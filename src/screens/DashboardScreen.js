@@ -21,6 +21,7 @@ export default function DashboardScreen({
   onNavigate,
   onResetData,
   onOpenCloudConfig,
+  onSelectStudent,
 }) {
   const getPctColor = (pct) => {
     if (pct >= 75) return '#10B981'; // Emerald Green
@@ -95,21 +96,26 @@ export default function DashboardScreen({
               <Ionicons name="trophy" size={20} color="#F59E0B" />
               <Text style={styles.topTitle}>Top 5 Students (Highest Attendance)</Text>
             </View>
-            <Text style={styles.topSub}>Students with highest attendance in Mechatronics 3rd Sem:</Text>
+            <Text style={styles.topSub}>Tap any student to open detailed graphical attendance charts:</Text>
             <View style={styles.topList}>
               {stats.topStudents.map((stu, index) => (
-                <View key={stu.id} style={styles.topItem}>
+                <TouchableOpacity
+                  key={stu.id}
+                  style={styles.topItem}
+                  onPress={() => onSelectStudent && onSelectStudent(stu)}
+                  activeOpacity={0.7}
+                >
                   <View style={styles.rankBadge}>
                     <Text style={styles.rankText}>#{index + 1}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.topName}>{stu.name}</Text>
-                    <Text style={styles.topRoll}>{stu.rollNo}</Text>
+                    <Text style={styles.topRoll}>{stu.rollNo} • Tap for Graph 📊</Text>
                   </View>
                   <View style={styles.topBadge}>
                     <Text style={styles.topBadgeText}>{stu.percentage}%</Text>
                   </View>
-                </View>
+                </TouchableOpacity>
               ))}
             </View>
           </View>
