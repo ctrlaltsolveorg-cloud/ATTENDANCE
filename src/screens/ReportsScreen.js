@@ -477,17 +477,17 @@ export default function ReportsScreen({ students, subjects, records, stats, onSe
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#0B132B',
   },
   header: {
     padding: 16,
-    backgroundColor: '#1E293B',
+    backgroundColor: 'rgba(11, 19, 43, 0.95)',
     borderBottomWidth: 1,
-    borderBottomColor: '#334155',
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#F8FAFC',
   },
   headerSub: {
@@ -511,14 +511,15 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 14,
     paddingVertical: 9,
-    borderRadius: 12,
-    backgroundColor: '#1E293B',
+    borderRadius: 14,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   tabActive: {
-    backgroundColor: '#4F46E5',
-    borderColor: '#6366F1',
+    backgroundColor: '#3A86FF',
+    borderColor: '#70D6FF',
+    boxShadow: '0 4px 14px rgba(58, 134, 255, 0.4)',
   },
   tabText: {
     color: '#94A3B8',
@@ -553,12 +554,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   studentReportRow: {
-    backgroundColor: '#1E293B',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 8,
+    backgroundColor: 'rgba(27, 38, 59, 0.75)',
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    boxShadow: '0 6px 20px rgba(0, 0, 0, 0.3)',
   },
   stuRowHeader: {
     flexDirection: 'row',

@@ -7,19 +7,19 @@ export default function Header({ branchInfo, title, subtitle, onOpenCloudConfig 
     <View style={styles.header}>
       <View style={styles.topRow}>
         <View style={styles.badge}>
-          <Ionicons name="school" size={14} color="#6366F1" />
+          <Ionicons name="sparkles" size={14} color="#70D6FF" />
           <Text style={styles.badgeText}>Purnea College of Engineering</Text>
         </View>
 
         {onOpenCloudConfig && (
           <TouchableOpacity style={styles.cloudBadge} onPress={onOpenCloudConfig} activeOpacity={0.7}>
-            <Ionicons name="cloud" size={14} color="#10B981" />
-            <Text style={styles.cloudBadgeText}>Supabase DB</Text>
+            <Ionicons name="cloud-done" size={14} color="#10B981" />
+            <Text style={styles.cloudBadgeText}>Supabase Sync</Text>
           </TouchableOpacity>
         )}
       </View>
       <Text style={styles.title}>{title || branchInfo?.name || 'Mechatronics Engineering (M.T.E)'}</Text>
-      <Text style={styles.subtitle}>{subtitle || `${branchInfo?.semester || '3rd Semester'} • 19 BEU Students • Room 202`}</Text>
+      <Text style={styles.subtitle}>{subtitle || `${branchInfo?.semester || '3rd Semester'} • BEU Patna Syllabus • Room 202`}</Text>
     </View>
   );
 }
@@ -27,11 +27,11 @@ export default function Header({ branchInfo, title, subtitle, onOpenCloudConfig 
 const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 18,
     paddingBottom: 16,
-    backgroundColor: '#0F172A',
+    backgroundColor: 'rgba(11, 19, 43, 0.95)',
     borderBottomWidth: 1,
-    borderBottomColor: '#1E293B',
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
   topRow: {
     flexDirection: 'row',
@@ -42,16 +42,19 @@ const styles = StyleSheet.create({
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(99, 102, 241, 0.15)',
-    paddingHorizontal: 10,
+    backgroundColor: 'rgba(112, 214, 255, 0.1)',
+    borderColor: 'rgba(112, 214, 255, 0.25)',
+    borderWidth: 1,
+    paddingHorizontal: 12,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 14,
     gap: 6,
   },
   badgeText: {
-    color: '#818CF8',
+    color: '#70D6FF',
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
   cloudBadge: {
     flexDirection: 'row',
@@ -71,13 +74,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 22,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#F8FAFC',
-    letterSpacing: -0.5,
+    letterSpacing: -0.4,
   },
   subtitle: {
     fontSize: 13,
     color: '#94A3B8',
     marginTop: 4,
+    fontWeight: '500',
   },
 });

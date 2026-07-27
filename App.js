@@ -236,70 +236,72 @@ export default function App() {
         onClose={() => setAnalyticsStudent(null)}
       />
 
-      {/* Bottom Navigation Tab Bar */}
-      <View style={styles.tabBar}>
-        <TouchableOpacity
-          style={styles.tabItem}
-          onPress={() => setActiveTab('dashboard')}
-          activeOpacity={0.7}
-        >
-          <Ionicons
-            name={activeTab === 'dashboard' ? 'grid' : 'grid-outline'}
-            size={22}
-            color={activeTab === 'dashboard' ? '#818CF8' : '#64748B'}
-          />
-          <Text style={[styles.tabLabel, activeTab === 'dashboard' && styles.tabLabelActive]}>
-            Dashboard
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.tabItem}
-          onPress={() => setActiveTab('mark')}
-          activeOpacity={0.7}
-        >
-          <View
-            style={[
-              styles.markIconCircle,
-              activeTab === 'mark' && styles.markIconCircleActive,
-            ]}
+      {/* Floating Glassmorphic Navigation Tab Bar */}
+      <View style={styles.tabBarWrapper}>
+        <View style={styles.tabBar}>
+          <TouchableOpacity
+            style={styles.tabItem}
+            onPress={() => setActiveTab('dashboard')}
+            activeOpacity={0.7}
           >
-            <Ionicons name="checkbox-outline" size={22} color="#FFFFFF" />
-          </View>
-          <Text style={[styles.tabLabel, activeTab === 'mark' && styles.tabLabelActive]}>
-            Mark Roll
-          </Text>
-        </TouchableOpacity>
+            <Ionicons
+              name={activeTab === 'dashboard' ? 'grid' : 'grid-outline'}
+              size={22}
+              color={activeTab === 'dashboard' ? '#70D6FF' : '#64748B'}
+            />
+            <Text style={[styles.tabLabel, activeTab === 'dashboard' && styles.tabLabelActive]}>
+              Dashboard
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.tabItem}
-          onPress={() => setActiveTab('students')}
-          activeOpacity={0.7}
-        >
-          <Ionicons
-            name={activeTab === 'students' ? 'people' : 'people-outline'}
-            size={22}
-            color={activeTab === 'students' ? '#818CF8' : '#64748B'}
-          />
-          <Text style={[styles.tabLabel, activeTab === 'students' && styles.tabLabelActive]}>
-            Students
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.tabItem}
+            onPress={() => setActiveTab('mark')}
+            activeOpacity={0.7}
+          >
+            <View
+              style={[
+                styles.markIconCircle,
+                activeTab === 'mark' && styles.markIconCircleActive,
+              ]}
+            >
+              <Ionicons name="checkbox-outline" size={22} color="#FFFFFF" />
+            </View>
+            <Text style={[styles.tabLabel, activeTab === 'mark' && styles.tabLabelActive]}>
+              Mark Roll
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.tabItem}
-          onPress={() => setActiveTab('reports')}
-          activeOpacity={0.7}
-        >
-          <Ionicons
-            name={activeTab === 'reports' ? 'document-text' : 'document-text-outline'}
-            size={22}
-            color={activeTab === 'reports' ? '#818CF8' : '#64748B'}
-          />
-          <Text style={[styles.tabLabel, activeTab === 'reports' && styles.tabLabelActive]}>
-            Reports
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.tabItem}
+            onPress={() => setActiveTab('students')}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={activeTab === 'students' ? 'people' : 'people-outline'}
+              size={22}
+              color={activeTab === 'students' ? '#70D6FF' : '#64748B'}
+            />
+            <Text style={[styles.tabLabel, activeTab === 'students' && styles.tabLabelActive]}>
+              Students
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.tabItem}
+            onPress={() => setActiveTab('reports')}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={activeTab === 'reports' ? 'document-text' : 'document-text-outline'}
+              size={22}
+              color={activeTab === 'reports' ? '#70D6FF' : '#64748B'}
+            />
+            <Text style={[styles.tabLabel, activeTab === 'reports' && styles.tabLabelActive]}>
+              Reports
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -308,11 +310,11 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#0B132B',
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#0B132B',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -325,15 +327,22 @@ const styles = StyleSheet.create({
   screenContainer: {
     flex: 1,
   },
+  tabBarWrapper: {
+    backgroundColor: 'transparent',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+  },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: '#1E293B',
-    borderTopWidth: 1,
-    borderTopColor: '#334155',
-    paddingVertical: 8,
+    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderRadius: 24,
+    paddingVertical: 10,
     paddingHorizontal: 12,
     justifyContent: 'space-around',
     alignItems: 'center',
+    boxShadow: '0 16px 40px rgba(0, 0, 0, 0.6)',
   },
   tabItem: {
     alignItems: 'center',
@@ -347,18 +356,20 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   tabLabelActive: {
-    color: '#818CF8',
+    color: '#70D6FF',
+    fontWeight: '700',
   },
   markIconCircle: {
     width: 38,
     height: 38,
-    borderRadius: 12,
+    borderRadius: 14,
     backgroundColor: '#6366F1',
     alignItems: 'center',
     justifyContent: 'center',
+    boxShadow: '0 6px 16px rgba(99, 102, 241, 0.4)',
   },
   markIconCircleActive: {
-    backgroundColor: '#4F46E5',
-    transform: [{ scale: 1.05 }],
+    backgroundColor: '#3A86FF',
+    transform: [{ scale: 1.08 }],
   },
 });
