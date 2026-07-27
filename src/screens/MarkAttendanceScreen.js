@@ -414,33 +414,34 @@ export default function MarkAttendanceScreen({
 
       {/* Holiday Banner Alert */}
       {isHoliday && (
-        <View style={styles.holidayBanner}>
-          <Ionicons name="umbrella" size={28} color="#A78BFA" />
+        <View style={[styles.holidayBanner, { backgroundColor: isLight ? '#F3E8FF' : 'rgba(139, 92, 246, 0.15)', borderColor: isLight ? '#C084FC' : 'rgba(139, 92, 246, 0.4)' }]}>
+          <Ionicons name="umbrella" size={28} color={isLight ? '#7C3AED' : '#A78BFA'} />
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={styles.holidayBannerTitle}>Official Holiday / Class Cancelled</Text>
+              <Text style={[styles.holidayBannerTitle, { color: isLight ? '#4C1D95' : '#DDD6FE' }]}>Official Holiday / Class Cancelled</Text>
               <TouchableOpacity style={styles.cancelHolidayPill} onPress={toggleHolidayMode} activeOpacity={0.7}>
                 <Ionicons name="close" size={12} color="#FFFFFF" />
                 <Text style={styles.cancelHolidayPillText}>Cancel Holiday</Text>
               </TouchableOpacity>
             </View>
-            <Text style={styles.holidayBannerSub}>
+            <Text style={[styles.holidayBannerSub, { color: isLight ? '#6B21A8' : '#A78BFA' }]}>
               Students will NOT be marked absent. Attendance percentage is completely exempt for this date.
             </Text>
             <View style={styles.reasonInputRow}>
-              <Text style={styles.reasonLabel}>Reason:</Text>
+              <Text style={[styles.reasonLabel, { color: isLight ? '#581C87' : '#C4B5FD' }]}>Reason:</Text>
               {Platform.OS === 'web' ? (
                 <input
                   type="text"
                   value={holidayReason}
                   onChange={(e) => setHolidayReason(e.target.value)}
                   style={{
-                    backgroundColor: 'rgba(255,255,255,0.1)',
-                    color: '#F8FAFC',
-                    border: '1px solid rgba(167, 139, 250, 0.4)',
+                    backgroundColor: isLight ? '#FFFFFF' : 'rgba(255,255,255,0.1)',
+                    color: isLight ? '#1E1B4B' : '#F8FAFC',
+                    border: isLight ? '1px solid #C084FC' : '1px solid rgba(167, 139, 250, 0.4)',
                     borderRadius: '6px',
                     padding: '4px 8px',
                     fontSize: '12px',
+                    fontWeight: 'bold',
                     outline: 'none',
                     width: '180px',
                   }}
@@ -448,11 +449,18 @@ export default function MarkAttendanceScreen({
                 />
               ) : (
                 <TextInput
-                  style={styles.reasonInput}
+                  style={[
+                    styles.reasonInput,
+                    {
+                      backgroundColor: isLight ? '#FFFFFF' : 'rgba(255, 255, 255, 0.1)',
+                      color: isLight ? '#1E1B4B' : '#F8FAFC',
+                      borderColor: isLight ? '#C084FC' : 'rgba(167, 139, 250, 0.4)',
+                    },
+                  ]}
                   value={holidayReason}
                   onChangeText={setHolidayReason}
                   placeholder="Reason (e.g. Sunday / Holiday)"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={isLight ? '#7C3AED' : '#94A3B8'}
                 />
               )}
             </View>
@@ -496,8 +504,8 @@ export default function MarkAttendanceScreen({
 
               {/* Status Badge Checkbox */}
               {isHoliday ? (
-                <View style={styles.holidayTagPill}>
-                  <Text style={styles.holidayTagPillText}>EXEMPT</Text>
+                <View style={[styles.holidayTagPill, { backgroundColor: isLight ? '#E9D5FF' : 'rgba(139, 92, 246, 0.25)', borderColor: isLight ? '#C084FC' : 'rgba(139, 92, 246, 0.4)' }]}>
+                  <Text style={[styles.holidayTagPillText, { color: isLight ? '#6B21A8' : '#C4B5FD' }]}>EXEMPT</Text>
                 </View>
               ) : (
                 <View
