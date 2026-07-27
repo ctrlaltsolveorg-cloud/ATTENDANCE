@@ -50,6 +50,7 @@ import SupabaseConfigModal from './src/components/SupabaseConfigModal';
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'mark' | 'students' | 'reports'
+  const [initialHoliday, setInitialHoliday] = useState(false);
   const [cloudModalVisible, setCloudModalVisible] = useState(false);
 
   const [branchInfo, setBranchInfo] = useState(null);
@@ -65,6 +66,11 @@ export default function App() {
     lowAttendanceStudents: [],
     topStudents: [],
   });
+
+  const handleNavigate = (tab, holiday = false) => {
+    setInitialHoliday(Boolean(holiday));
+    setActiveTab(tab);
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -172,7 +178,7 @@ export default function App() {
             subjects={subjects}
             records={records}
             stats={stats}
-            onNavigate={setActiveTab}
+            onNavigate={handleNavigate}
             onResetData={handleResetData}
             onOpenCloudConfig={() => setCloudModalVisible(true)}
           />
@@ -183,8 +189,9 @@ export default function App() {
             students={students}
             subjects={subjects}
             records={records}
+            initialHoliday={initialHoliday}
             onSaveSession={handleSaveSession}
-            onCancel={() => setActiveTab('dashboard')}
+            onCancel={() => handleNavigate('dashboard')}
           />
         )}
 

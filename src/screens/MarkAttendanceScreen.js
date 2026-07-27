@@ -49,6 +49,8 @@ export default function MarkAttendanceScreen({
   // Set of student IDs marked present
   const [presentMap, setPresentMap] = useState({});
   const [editingSessionId, setEditingSessionId] = useState(null);
+  const [isHoliday, setIsHoliday] = useState(false);
+  const [holidayReason, setHolidayReason] = useState('College Holiday');
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
 
   const shiftDate = (days) => {
@@ -87,11 +89,15 @@ export default function MarkAttendanceScreen({
         updatedMap[stu.id] = presentSet.has(stu.id);
       });
       setEditingSessionId(existingRec.id);
+      setIsHoliday(Boolean(existingRec.isHoliday));
+      setHolidayReason(existingRec.holidayReason || 'College Holiday');
     } else {
       students.forEach((stu) => {
         updatedMap[stu.id] = false;
       });
       setEditingSessionId(null);
+      setIsHoliday(false);
+      setHolidayReason('College Holiday');
     }
     setPresentMap(updatedMap);
   }, [selectedSubjectId, dateStr, records, students]);
@@ -119,6 +125,19 @@ export default function MarkAttendanceScreen({
     setPresentMap(updated);
   };
 
+  const toggleHolidayMode = () => {
+    if (!isHoliday) {
+      setIsHoliday(true);
+      const updated = {};
+      students.forEach((stu) => {
+        updated[stu.id] = false;
+      });
+      setPresentMap(updated);
+    } else {
+      setIsHoliday(false);
+    }
+  };
+
   const handleSavePress = () => {
     const selectedSub = subjects.find((s) => s.id === selectedSubjectId);
     if (!selectedSub) {
@@ -131,8 +150,8 @@ export default function MarkAttendanceScreen({
   const executeConfirmedSave = async () => {
     setPasswordModalVisible(false);
     const selectedSub = subjects.find((s) => s.id === selectedSubjectId);
-    const presentStudentIds = Object.keys(presentMap).filter((id) => presentMap[id]);
-    const absentCount = students.length - presentStudentIds.length;
+    const presentStudentIds = isHoliday ? [] : Object.keys(presentMap).filter((id) => presentMap[id]);
+    const absentCount = isHoliday ? 0 : (students.length - presentStudentIds.length);
     const sessionId = editingSessionId || `${selectedSubjectId}_${dateStr}`;
 
     const sessionData = {
@@ -142,13 +161,20 @@ export default function MarkAttendanceScreen({
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       presentStudentIds,
       totalStudents: students.length,
+      isHoliday,
+      holidayReason: isHoliday ? (holidayReason || 'College Holiday') : '',
     };
 
     const res = await onSaveSession(sessionData);
 
     const isCloud = res?.syncedCloud;
-    const title = isCloud ? '☁️ Synced to Supabase Cloud DB!' : '💾 Saved to Local Storage';
-    const msg = `Subject: ${selectedSub.name} (${selectedSub.code})\nDate: ${formatDisplayDate(dateStr)} (${dateStr})\n\n• Present: ${presentStudentIds.length} Students\n• Absent: ${absentCount} Students\n\nDatabase Status: ${isCloud ? '🟢 Live Synced on Supabase Cloud' : '🟡 Stored Locally'}`;
+    const title = isHoliday
+      ? '🎉 Holiday Saved!'
+      : (isCloud ? '☁️ Synced to Supabase Cloud DB!' : '💾 Saved to Local Storage');
+
+    const msg = isHoliday
+      ? `Subject: ${selectedSub.name}\nDate: ${formatDisplayDate(dateStr)}\nStatus: HOLIDAY (${holidayReason})\n\nResult: 0% Penalty (Excluded from student attendance percentage)`
+      : `Subject: ${selectedSub.name} (${selectedSub.code})\nDate: ${formatDisplayDate(dateStr)} (${dateStr})\n\n• Present: ${presentStudentIds.length} Students\n• Absent: ${absentCount} Students\n\nDatabase Status: ${isCloud ? '🟢 Live Synced on Supabase Cloud' : '🟡 Stored Locally'}`;
 
     Alert.alert(title, msg, [{ text: 'OK' }]);
   };
@@ -168,9 +194,9 @@ export default function MarkAttendanceScreen({
       <View style={styles.header}>
         <View style={styles.headerTitleRow}>
           <Text style={styles.headerTitle}>Mark Attendance</Text>
-          <View style={styles.counterBadge}>
-            <Text style={styles.counterText}>
-              {presentCount} / {students.length} Present
+          <View style={[styles.counterBadge, isHoliday && styles.counterBadgeHoliday]}>
+            <Text style={[styles.counterText, isHoliday && styles.counterTextHoliday]}>
+              {isHoliday ? '🎉 HOLIDAY (Exempt)' : `${presentCount} / ${students.length} Present`}
             </Text>
           </View>
         </View>
@@ -291,14 +317,71 @@ export default function MarkAttendanceScreen({
         </View>
 
         <View style={styles.batchBtnRow}>
-          <TouchableOpacity style={styles.batchBtnP} onPress={markAllPresent}>
-            <Text style={styles.batchBtnPText}>All P</Text>
+          <TouchableOpacity
+            style={[styles.holidayBtn, isHoliday && styles.holidayBtnActive]}
+            onPress={toggleHolidayMode}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="sparkles" size={14} color={isHoliday ? '#FFFFFF' : '#8B5CF6'} />
+            <Text style={[styles.holidayBtnText, isHoliday && styles.holidayBtnTextActive]}>
+              {isHoliday ? 'Cancel Holiday' : 'Mark Holiday'}
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.batchBtnA} onPress={markAllAbsent}>
-            <Text style={styles.batchBtnAText}>All A</Text>
-          </TouchableOpacity>
+
+          {!isHoliday && (
+            <>
+              <TouchableOpacity style={styles.batchBtnP} onPress={markAllPresent}>
+                <Text style={styles.batchBtnPText}>All P</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.batchBtnA} onPress={markAllAbsent}>
+                <Text style={styles.batchBtnAText}>All A</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </View>
+
+      {/* Holiday Banner Alert */}
+      {isHoliday && (
+        <View style={styles.holidayBanner}>
+          <Ionicons name="umbrella" size={28} color="#A78BFA" />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.holidayBannerTitle}>Official Holiday / Class Cancelled</Text>
+            <Text style={styles.holidayBannerSub}>
+              Students will NOT be marked absent. Attendance percentage is completely exempt for this date.
+            </Text>
+            <View style={styles.reasonInputRow}>
+              <Text style={styles.reasonLabel}>Reason:</Text>
+              {Platform.OS === 'web' ? (
+                <input
+                  type="text"
+                  value={holidayReason}
+                  onChange={(e) => setHolidayReason(e.target.value)}
+                  style={{
+                    backgroundColor: 'rgba(255,255,255,0.1)',
+                    color: '#F8FAFC',
+                    border: '1px solid rgba(167, 139, 250, 0.4)',
+                    borderRadius: '6px',
+                    padding: '4px 8px',
+                    fontSize: '12px',
+                    outline: 'none',
+                    width: '180px',
+                  }}
+                  placeholder="e.g. Sunday / College Festival"
+                />
+              ) : (
+                <TextInput
+                  style={styles.reasonInput}
+                  value={holidayReason}
+                  onChangeText={setHolidayReason}
+                  placeholder="Reason (e.g. Sunday / Holiday)"
+                  placeholderTextColor="#94A3B8"
+                />
+              )}
+            </View>
+          </View>
+        </View>
+      )}
 
       {/* Ultra Clean Attendance Register List */}
       <FlatList
@@ -312,14 +395,15 @@ export default function MarkAttendanceScreen({
             <TouchableOpacity
               style={[
                 styles.registerRow,
-                isPresent ? styles.rowPresent : styles.rowAbsent,
+                isHoliday ? styles.rowHoliday : (isPresent ? styles.rowPresent : styles.rowAbsent),
               ]}
-              onPress={() => toggleAttendance(item.id)}
+              onPress={() => !isHoliday && toggleAttendance(item.id)}
+              disabled={isHoliday}
               activeOpacity={0.7}
             >
               {/* Roll Badge */}
-              <View style={[styles.rollBadge, isPresent && styles.rollBadgePresent]}>
-                <Text style={[styles.rollText, isPresent && styles.rollTextPresent]}>
+              <View style={[styles.rollBadge, isHoliday ? styles.rollBadgeHoliday : (isPresent && styles.rollBadgePresent)]}>
+                <Text style={[styles.rollText, isHoliday ? styles.rollTextHoliday : (isPresent && styles.rollTextPresent)]}>
                   {item.rollNo}
                 </Text>
               </View>
@@ -329,17 +413,23 @@ export default function MarkAttendanceScreen({
                 {item.name}
               </Text>
 
-              {/* Minimal Checkbox: Green when Present, Empty dark when Absent */}
-              <View
-                style={[
-                  styles.checkboxSquare,
-                  isPresent ? styles.checkboxChecked : styles.checkboxUnchecked,
-                ]}
-              >
-                {isPresent && (
-                  <Ionicons name="checkmark" size={20} color="#FFFFFF" />
-                )}
-              </View>
+              {/* Status Badge */}
+              {isHoliday ? (
+                <View style={styles.holidayTagPill}>
+                  <Text style={styles.holidayTagPillText}>EXEMPT</Text>
+                </View>
+              ) : (
+                <View
+                  style={[
+                    styles.checkboxSquare,
+                    isPresent ? styles.checkboxChecked : styles.checkboxUnchecked,
+                  ]}
+                >
+                  {isPresent && (
+                    <Ionicons name="checkmark" size={20} color="#FFFFFF" />
+                  )}
+                </View>
+              )}
             </TouchableOpacity>
           );
         }}
@@ -347,9 +437,15 @@ export default function MarkAttendanceScreen({
 
       {/* Save Floating Bar */}
       <View style={styles.bottomBar}>
-        <TouchableOpacity style={styles.saveBtn} onPress={handleSavePress} activeOpacity={0.8}>
-          <Ionicons name="cloud-upload" size={20} color="#FFFFFF" />
-          <Text style={styles.saveBtnText}>Save Attendance Session</Text>
+        <TouchableOpacity
+          style={[styles.saveBtn, isHoliday && styles.saveBtnHoliday]}
+          onPress={handleSavePress}
+          activeOpacity={0.8}
+        >
+          <Ionicons name={isHoliday ? 'sparkles' : 'cloud-upload'} size={20} color="#FFFFFF" />
+          <Text style={styles.saveBtnText}>
+            {isHoliday ? 'Save Date as Holiday' : 'Save Attendance Session'}
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -712,5 +808,110 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '700',
+  },
+  counterBadgeHoliday: {
+    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+    borderColor: '#8B5CF6',
+  },
+  counterTextHoliday: {
+    color: '#C4B5FD',
+  },
+  holidayBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(139, 92, 246, 0.15)',
+    borderColor: 'rgba(139, 92, 246, 0.5)',
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  holidayBtnActive: {
+    backgroundColor: '#8B5CF6',
+    borderColor: '#8B5CF6',
+  },
+  holidayBtnText: {
+    color: '#C4B5FD',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  holidayBtnTextActive: {
+    color: '#FFFFFF',
+  },
+  holidayBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: 'rgba(139, 92, 246, 0.15)',
+    borderColor: 'rgba(139, 92, 246, 0.4)',
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 14,
+    marginHorizontal: 12,
+    marginBottom: 10,
+    maxWidth: 650,
+    alignSelf: 'center',
+    width: '95%',
+  },
+  holidayBannerTitle: {
+    color: '#DDD6FE',
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  holidayBannerSub: {
+    color: '#A78BFA',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  reasonInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 8,
+  },
+  reasonLabel: {
+    color: '#C4B5FD',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  reasonInput: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    color: '#F8FAFC',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    fontSize: 12,
+    borderColor: 'rgba(167, 139, 250, 0.4)',
+    borderWidth: 1,
+    flex: 1,
+  },
+  rowHoliday: {
+    backgroundColor: 'rgba(139, 92, 246, 0.08)',
+    borderColor: 'rgba(139, 92, 246, 0.25)',
+    opacity: 0.85,
+  },
+  rollBadgeHoliday: {
+    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+  },
+  rollTextHoliday: {
+    color: '#C4B5FD',
+  },
+  holidayTagPill: {
+    backgroundColor: 'rgba(139, 92, 246, 0.25)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.4)',
+  },
+  holidayTagPillText: {
+    color: '#C4B5FD',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  saveBtnHoliday: {
+    backgroundColor: '#8B5CF6',
   },
 });

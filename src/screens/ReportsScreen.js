@@ -125,7 +125,7 @@ export default function ReportsScreen({ students, subjects, records, stats }) {
                     contentContainerStyle={styles.horizontalSubList}
                   >
                     {subjects.map((sub) => {
-                      const subRecords = records.filter((r) => r.subjectId === sub.id);
+                      const subRecords = records.filter((r) => r.subjectId === sub.id && !r.isHoliday);
                       const totalSub = subRecords.length;
                       const attended = subRecords.filter((r) => (r.presentStudentIds || []).includes(stu.id)).length;
                       const subPct = totalSub > 0 ? Math.round((attended / totalSub) * 100) : null;

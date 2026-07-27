@@ -34,8 +34,8 @@ export default function DashboardScreen({
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
 
-        {/* Hero Glassmorphic Logo Video Player */}
-        <View style={styles.videoCardContainer}>
+        {/* Hero Background Video Banner Strip */}
+        <View style={styles.videoStripContainer}>
           {Platform.OS === 'web' ? (
             <video
               src={require('../../assets/logov.mp4')}
@@ -44,39 +44,68 @@ export default function DashboardScreen({
               muted
               playsInline
               style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
                 width: '100%',
-                height: 190,
-                borderRadius: 16,
+                height: '100%',
                 objectFit: 'cover',
-                border: '1px solid rgba(99, 102, 241, 0.35)',
-                boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                opacity: 0.45,
+                pointerEvents: 'none',
               }}
             />
           ) : (
-            <View style={styles.videoFallback}>
-              <Ionicons name="play-circle" size={42} color="#818CF8" />
-              <Text style={styles.videoFallbackText}>Mechatronics Department Logo Video</Text>
-            </View>
+            <View style={styles.videoFallback} />
           )}
+
+          {/* Dark Glass Overlay & Content Strip */}
+          <View style={styles.videoStripOverlay}>
+            <View style={styles.stripHeaderBadge}>
+              <Ionicons name="sparkles" size={14} color="#818CF8" />
+              <Text style={styles.stripBadgeText}>MECHATRONICS DEPT</Text>
+            </View>
+            <Text style={styles.stripTitle}>Purnea College of Engineering</Text>
+            <Text style={styles.stripSubtitle}>3rd Semester Attendance Portal • BEU Patna</Text>
+          </View>
         </View>
 
-        {/* Quick Action Button */}
-        <TouchableOpacity
-          style={styles.markCTA}
-          activeOpacity={0.8}
-          onPress={() => onNavigate('mark')}
-        >
-          <View style={styles.markCTAContent}>
-            <View style={styles.markCTAIcon}>
-              <Ionicons name="checkbox" size={24} color="#FFFFFF" />
+        {/* Quick Action Grid Row */}
+        <View style={styles.ctaGrid}>
+          <TouchableOpacity
+            style={styles.markCTA}
+            activeOpacity={0.8}
+            onPress={() => onNavigate('mark', false)}
+          >
+            <View style={styles.markCTAContent}>
+              <View style={styles.markCTAIcon}>
+                <Ionicons name="checkbox" size={22} color="#FFFFFF" />
+              </View>
+              <View>
+                <Text style={styles.markCTATitle}>Mark Attendance</Text>
+                <Text style={styles.markCTASub}>Regular Class Roll Call</Text>
+              </View>
             </View>
-            <Text style={styles.markCTATitle}>Mark Attendance Now</Text>
-          </View>
+            <Ionicons name="arrow-forward" size={18} color="#C7D2FE" />
+          </TouchableOpacity>
 
-          <View style={styles.markCTAArrow}>
-            <Ionicons name="arrow-forward" size={18} color="#4F46E5" />
-          </View>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.holidayCTA}
+            activeOpacity={0.8}
+            onPress={() => onNavigate('mark', true)}
+          >
+            <View style={styles.markCTAContent}>
+              <View style={styles.holidayCTAIcon}>
+                <Ionicons name="umbrella" size={22} color="#FFFFFF" />
+              </View>
+              <View>
+                <Text style={styles.holidayCTATitle}>Declare Holiday</Text>
+                <Text style={styles.holidayCTASub}>College Closed / Chhuti</Text>
+              </View>
+            </View>
+            <Ionicons name="sparkles" size={18} color="#DDD6FE" />
+          </TouchableOpacity>
+        </View>
 
         {/* Top 5 Students Leaderboard Section */}
         {stats.topStudents && stats.topStudents.length > 0 && (
@@ -163,23 +192,32 @@ export default function DashboardScreen({
         ) : (
           records.slice(0, 5).map((rec) => {
             const sub = subjects.find((s) => s.id === rec.subjectId) || { name: 'Subject', code: rec.subjectId };
+            const isHoliday = rec.isHoliday;
             const presentCount = (rec.presentStudentIds || []).length;
             const pct = Math.round((presentCount / (rec.totalStudents || 30)) * 100);
 
             return (
               <View key={rec.id} style={styles.historyItem}>
-                <View style={styles.historyIcon}>
-                  <Ionicons name="checkmark-circle" size={24} color="#10B981" />
+                <View style={[styles.historyIcon, isHoliday && { backgroundColor: 'rgba(139, 92, 246, 0.15)' }]}>
+                  <Ionicons
+                    name={isHoliday ? "sparkles" : "checkmark-circle"}
+                    size={24}
+                    color={isHoliday ? "#8B5CF6" : "#10B981"}
+                  />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.historySubName}>{sub.name} ({sub.code})</Text>
-                  <Text style={styles.historyDate}>{rec.date} • {rec.time || 'Class'}</Text>
+                  <Text style={styles.historyDate}>
+                    {rec.date} • {isHoliday ? `HOLIDAY (${rec.holidayReason || 'College Closed'})` : (rec.time || 'Class')}
+                  </Text>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={styles.historyCount}>
-                    {presentCount} / {rec.totalStudents || 30} Present
+                  <Text style={[styles.historyCount, isHoliday && { color: '#C4B5FD' }]}>
+                    {isHoliday ? 'Exempt' : `${presentCount} / ${rec.totalStudents || 30} Present`}
                   </Text>
-                  <Text style={[styles.historyPct, { color: getPctColor(pct) }]}>{pct}%</Text>
+                  <Text style={[styles.historyPct, { color: isHoliday ? '#8B5CF6' : getPctColor(pct) }]}>
+                    {isHoliday ? 'HOLIDAY' : `${pct}%`}
+                  </Text>
                 </View>
               </View>
             );
@@ -202,75 +240,131 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 40,
   },
-  videoCardContainer: {
+  videoStripContainer: {
     width: '100%',
+    height: 110,
     marginBottom: 16,
     borderRadius: 16,
     overflow: 'hidden',
-    backgroundColor: '#1E293B',
+    position: 'relative',
+    backgroundColor: '#0F172A',
     borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.3)',
+    borderColor: 'rgba(99, 102, 241, 0.4)',
+  },
+  videoStripOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    justifyContent: 'center',
+    backgroundColor: 'rgba(15, 23, 42, 0.55)',
+  },
+  stripHeaderBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(99, 102, 241, 0.25)',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 20,
+    marginBottom: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(129, 140, 248, 0.4)',
+  },
+  stripBadgeText: {
+    color: '#A5B4FC',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+  },
+  stripTitle: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: -0.3,
+  },
+  stripSubtitle: {
+    color: '#94A3B8',
+    fontSize: 12,
+    marginTop: 2,
+    fontWeight: '500',
   },
   videoFallback: {
-    height: 180,
-    alignItems: 'center',
-    justifyContent: 'center',
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: '#1E293B',
-    gap: 8,
-  },
-  videoFallbackText: {
-    color: '#94A3B8',
-    fontSize: 13,
-    fontWeight: '600',
   },
   statsGrid: {
     flexDirection: 'row',
     gap: 12,
   },
-  markCTA: {
+  ctaGrid: {
     marginTop: 8,
+    gap: 10,
+  },
+  markCTA: {
     backgroundColor: '#4F46E5',
     borderRadius: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
     borderColor: '#6366F1',
   },
+  holidayCTA: {
+    backgroundColor: '#7C3AED',
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: '#8B5CF6',
+  },
   markCTAContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    gap: 12,
   },
   markCTAIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 10,
     backgroundColor: 'rgba(255, 255, 255, 0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  holidayCTAIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   markCTATitle: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '800',
-    letterSpacing: 0.3,
   },
   markCTASub: {
     color: '#C7D2FE',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
-    marginTop: 2,
+    marginTop: 1,
   },
-  markCTAArrow: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
+  holidayCTATitle: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  holidayCTASub: {
+    color: '#DDD6FE',
+    fontSize: 11,
+    fontWeight: '500',
+    marginTop: 1,
   },
   topCard: {
     marginTop: 16,

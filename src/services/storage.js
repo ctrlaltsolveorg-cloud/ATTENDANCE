@@ -161,15 +161,32 @@ export const getAttendanceRecords = async () => {
       .order('created_at', { ascending: false });
 
     if (!error && remoteRecords) {
-      const mapped = remoteRecords.map((r) => ({
-        id: r.id,
-        subjectId: r.subject_id,
-        date: r.date,
-        time: r.time || '',
-        presentStudentIds: typeof r.present_student_ids === 'string' ? JSON.parse(r.present_student_ids) : (r.present_student_ids || []),
-        totalStudents: r.total_students || 30,
-        createdAt: r.created_at,
-      }));
+      const mapped = remoteRecords.map((r) => {
+        const presentList = typeof r.present_student_ids === 'string'
+          ? JSON.parse(r.present_student_ids)
+          : (r.present_student_ids || []);
+        
+        const isHolidayFromList = Array.isArray(presentList) && presentList.includes('__HOLIDAY__');
+        const isHolidayFromTime = typeof r.time === 'string' && r.time.startsWith('HOLIDAY:');
+        const isHoliday = Boolean(r.is_holiday || isHolidayFromList || isHolidayFromTime);
+
+        let holidayReason = r.holiday_reason || '';
+        if (!holidayReason && isHolidayFromTime) {
+          holidayReason = r.time.replace('HOLIDAY:', '').trim();
+        }
+
+        return {
+          id: r.id,
+          subjectId: r.subject_id,
+          date: r.date,
+          time: r.time || '',
+          presentStudentIds: isHoliday ? [] : presentList.filter((id) => id !== '__HOLIDAY__'),
+          totalStudents: r.total_students || 30,
+          isHoliday,
+          holidayReason: holidayReason || 'College Holiday',
+          createdAt: r.created_at,
+        };
+      });
       await AsyncStorage.setItem(KEYS.ATTENDANCE, JSON.stringify(mapped));
       return mapped;
     }
@@ -213,16 +230,29 @@ export const saveAttendanceSession = async (session) => {
       .eq('subject_id', session.subjectId)
       .eq('date', session.date);
 
-    const { error } = await supabase.from('attendance_records').upsert({
+    const basePayload = {
       id: session.id,
       subject_id: session.subjectId,
       date: session.date,
-      time: session.time || '',
-      present_student_ids: session.presentStudentIds || [],
+      time: session.isHoliday ? `HOLIDAY: ${session.holidayReason || 'College Closed'}` : (session.time || ''),
+      present_student_ids: session.isHoliday ? ['__HOLIDAY__'] : (session.presentStudentIds || []),
       total_students: session.totalStudents || 30,
+    };
+
+    // Attempt upsert with extra schema columns first
+    let { error } = await supabase.from('attendance_records').upsert({
+      ...basePayload,
+      is_holiday: session.isHoliday || false,
+      holiday_reason: session.holidayReason || '',
     });
 
-    if (!error) {
+    if (error) {
+      // Fallback: If remote table does not have is_holiday / holiday_reason columns yet, upsert basePayload without throwing 400 Bad Request
+      const fallbackRes = await supabase.from('attendance_records').upsert(basePayload);
+      if (!fallbackRes.error) {
+        syncedCloud = true;
+      }
+    } else {
       syncedCloud = true;
     }
   } catch (e) {
@@ -268,7 +298,9 @@ export const resetToDefaultData = async () => {
  * Calculate full analytics stats
  */
 export const calculateStats = (students, subjects, records) => {
-  const totalSessions = records.length;
+  // Only non-holiday records count towards attendance sessions
+  const activeRecords = records.filter((r) => !r.isHoliday);
+  const totalSessions = activeRecords.length;
   
   // Calculate total student attendances
   let totalPresentMarks = 0;
@@ -287,6 +319,9 @@ export const calculateStats = (students, subjects, records) => {
   });
 
   records.forEach((rec) => {
+    // Skip holidays - they should NOT count as absent nor affect attendance percentages
+    if (rec.isHoliday) return;
+
     const subId = rec.subjectId;
     const presentList = rec.presentStudentIds || [];
     const classSize = rec.totalStudents || students.length;
@@ -362,7 +397,7 @@ export const generateCSVReport = (students, subjects, records) => {
 
   const rows = students.map((stu) => {
     const subjectCells = subjects.map((sub) => {
-      const subRecords = records.filter((r) => r.subjectId === sub.id);
+      const subRecords = records.filter((r) => r.subjectId === sub.id && !r.isHoliday);
       const totalSub = subRecords.length;
       if (totalSub === 0) return '"0/0 (N/A)"';
       const attended = subRecords.filter((r) =>
@@ -473,6 +508,12 @@ export const generatePrintableHTMLRegister = (students, subjects, records, branc
         if (dayRecs.length === 0) {
           // No class held on this date
           return `<td style="text-align:center;color:#CBD5E1;font-size:9px;">-</td>`;
+        }
+
+        // Check if any record on this date was marked as Holiday
+        const isHoliday = dayRecs.some((r) => r.isHoliday);
+        if (isHoliday) {
+          return `<td style="color:#8B5CF6;font-weight:bold;text-align:center;background-color:rgba(139,92,246,0.12);" title="Holiday">H</td>`;
         }
 
         // Check if student was present in class(es) on this date

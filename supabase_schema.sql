@@ -39,8 +39,13 @@ CREATE TABLE IF NOT EXISTS public.attendance_records (
     time TEXT,
     present_student_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
     total_students INTEGER DEFAULT 30,
+    is_holiday BOOLEAN DEFAULT false,
+    holiday_reason TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE public.attendance_records ADD COLUMN IF NOT EXISTS is_holiday BOOLEAN DEFAULT false;
+ALTER TABLE public.attendance_records ADD COLUMN IF NOT EXISTS holiday_reason TEXT;
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE public.students ENABLE ROW LEVEL SECURITY;
