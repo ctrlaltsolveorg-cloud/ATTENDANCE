@@ -1046,7 +1046,7 @@ const styles = StyleSheet.create({
   verticalPlotArea: {
     width: 22,
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: 'transparent',
     borderRadius: 6,
     justifyContent: 'flex-end',
     overflow: 'hidden',

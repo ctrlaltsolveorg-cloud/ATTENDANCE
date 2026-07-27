@@ -232,8 +232,8 @@ export default function MarkAttendanceScreen({
         <Text style={[styles.headerSub, { color: colors.textSub }]}>Mechatronics 3rd Semester • Purnea College of Engg.</Text>
 
         {/* Interactive Date Selector & Plus/Minus Stepper Buttons */}
-        <View style={[styles.dateBar, { backgroundColor: colors.bgGlass, borderColor: colors.glassBorder }]}>
-          <View style={styles.dateRow}>
+        <View style={[styles.dateBar, { backgroundColor: 'transparent' }]}>
+          <View style={[styles.dateRow, { backgroundColor: colors.bgGlass, borderColor: colors.glassBorder, borderWidth: 1 }]}>
             <Ionicons name="calendar" size={16} color={colors.primary} />
             <Text style={[styles.dateLabel, { color: colors.textSub }]}>Date:</Text>
             
@@ -266,23 +266,53 @@ export default function MarkAttendanceScreen({
           </View>
 
           {/* Plus and Minus Stepper Buttons */}
-          <TouchableOpacity style={styles.pmBtn} onPress={() => shiftDate(-1)} activeOpacity={0.7}>
-            <Text style={styles.pmBtnText}>-</Text>
+          <TouchableOpacity
+            style={[
+              styles.pmBtn,
+              {
+                backgroundColor: isLight ? '#EEF2FF' : '#334155',
+                borderColor: isLight ? '#C7D2FE' : '#475569',
+              },
+            ]}
+            onPress={() => shiftDate(-1)}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.pmBtnText, { color: isLight ? '#4F46E5' : '#F8FAFC' }]}>-</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.pmBtn} onPress={() => shiftDate(1)} activeOpacity={0.7}>
-            <Text style={styles.pmBtnText}>+</Text>
+          <TouchableOpacity
+            style={[
+              styles.pmBtn,
+              {
+                backgroundColor: isLight ? '#EEF2FF' : '#334155',
+                borderColor: isLight ? '#C7D2FE' : '#475569',
+              },
+            ]}
+            onPress={() => shiftDate(1)}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.pmBtnText, { color: isLight ? '#4F46E5' : '#F8FAFC' }]}>+</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.todayBtn} onPress={setToday} activeOpacity={0.7}>
-            <Text style={styles.todayBtnText}>Today</Text>
+          <TouchableOpacity
+            style={[
+              styles.todayBtn,
+              {
+                backgroundColor: isLight ? '#EEF2FF' : 'rgba(99, 102, 241, 0.15)',
+                borderColor: isLight ? '#C7D2FE' : '#6366F1',
+              },
+            ]}
+            onPress={setToday}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.todayBtnText, { color: colors.primary }]}>Today</Text>
           </TouchableOpacity>
         </View>
 
         {/* Prominent Formatted Live Date Display Pill */}
-        <View style={styles.dateFormattedBadge}>
-          <Ionicons name="calendar-outline" size={14} color="#818CF8" />
-          <Text style={styles.dateFormattedText}>{formatDisplayDate(dateStr)}</Text>
+        <View style={[styles.dateFormattedBadge, { backgroundColor: colors.bgGlass, borderColor: colors.glassBorder }]}>
+          <Ionicons name="calendar-outline" size={14} color={colors.primary} />
+          <Text style={[styles.dateFormattedText, { color: colors.primary }]}>{formatDisplayDate(dateStr)}</Text>
           {editingSessionId ? (
             <View style={styles.editPill}>
               <Text style={styles.editPillText}>Editing Saved Record</Text>
@@ -353,12 +383,18 @@ export default function MarkAttendanceScreen({
 
         <View style={styles.batchBtnRow}>
           <TouchableOpacity
-            style={[styles.holidayBtn, isHoliday && styles.holidayBtnActive]}
+            style={[
+              styles.holidayBtn,
+              {
+                backgroundColor: isHoliday ? '#8B5CF6' : (isLight ? '#F5F3FF' : 'rgba(139, 92, 246, 0.15)'),
+                borderColor: isHoliday ? '#8B5CF6' : (isLight ? '#DDD6FE' : '#8B5CF6'),
+              },
+            ]}
             onPress={toggleHolidayMode}
             activeOpacity={0.7}
           >
             <Ionicons name={isHoliday ? "close-circle" : "sparkles"} size={14} color={isHoliday ? '#FFFFFF' : '#8B5CF6'} />
-            <Text style={[styles.holidayBtnText, isHoliday && styles.holidayBtnTextActive]}>
+            <Text style={[styles.holidayBtnText, { color: isHoliday ? '#FFFFFF' : '#8B5CF6' }]}>
               {isHoliday ? 'Cancel Holiday' : 'Holiday'}
             </Text>
           </TouchableOpacity>
