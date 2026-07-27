@@ -231,7 +231,7 @@ export default function DashboardScreen({
             <View style={styles.markCTAIcon}>
               <Ionicons name="checkbox" size={24} color="#FFFFFF" />
             </View>
-            <Text style={styles.markCTATitle}>Mark Attendance Now</Text>
+            <Text style={styles.markCTATitle}>Mark Attendance</Text>
           </View>
 
           <View style={styles.markCTAArrow}>
