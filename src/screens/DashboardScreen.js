@@ -283,10 +283,7 @@ export default function DashboardScreen({
                     </View>
 
                     <Text style={[styles.periodSubject, { color: colors.textMain }]}>
-                      {item.name} ({item.code})
-                    </Text>
-                    <Text style={[styles.periodFaculty, { color: colors.textSub }]}>
-                      Faculty: {item.faculty}
+                      {item.code} • {item.faculty}
                     </Text>
                   </View>
 
