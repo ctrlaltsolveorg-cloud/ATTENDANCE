@@ -324,7 +324,7 @@ export default function MarkAttendanceScreen({
           >
             <Ionicons name="sparkles" size={14} color={isHoliday ? '#FFFFFF' : '#8B5CF6'} />
             <Text style={[styles.holidayBtnText, isHoliday && styles.holidayBtnTextActive]}>
-              {isHoliday ? 'Cancel Holiday' : 'Mark Holiday'}
+              Holiday
             </Text>
           </TouchableOpacity>
 

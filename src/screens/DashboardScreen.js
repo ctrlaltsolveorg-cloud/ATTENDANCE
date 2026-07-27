@@ -70,42 +70,23 @@ export default function DashboardScreen({
           </View>
         </View>
 
-        {/* Quick Action Grid Row */}
-        <View style={styles.ctaGrid}>
-          <TouchableOpacity
-            style={styles.markCTA}
-            activeOpacity={0.8}
-            onPress={() => onNavigate('mark', false)}
-          >
-            <View style={styles.markCTAContent}>
-              <View style={styles.markCTAIcon}>
-                <Ionicons name="checkbox" size={22} color="#FFFFFF" />
-              </View>
-              <View>
-                <Text style={styles.markCTATitle}>Mark Attendance</Text>
-                <Text style={styles.markCTASub}>Regular Class Roll Call</Text>
-              </View>
+        {/* Quick Action Button */}
+        <TouchableOpacity
+          style={styles.markCTA}
+          activeOpacity={0.8}
+          onPress={() => onNavigate('mark')}
+        >
+          <View style={styles.markCTAContent}>
+            <View style={styles.markCTAIcon}>
+              <Ionicons name="checkbox" size={24} color="#FFFFFF" />
             </View>
-            <Ionicons name="arrow-forward" size={18} color="#C7D2FE" />
-          </TouchableOpacity>
+            <Text style={styles.markCTATitle}>Mark Attendance Now</Text>
+          </View>
 
-          <TouchableOpacity
-            style={styles.holidayCTA}
-            activeOpacity={0.8}
-            onPress={() => onNavigate('mark', true)}
-          >
-            <View style={styles.markCTAContent}>
-              <View style={styles.holidayCTAIcon}>
-                <Ionicons name="umbrella" size={22} color="#FFFFFF" />
-              </View>
-              <View>
-                <Text style={styles.holidayCTATitle}>Declare Holiday</Text>
-                <Text style={styles.holidayCTASub}>College Closed / Chhuti</Text>
-              </View>
-            </View>
-            <Ionicons name="sparkles" size={18} color="#DDD6FE" />
-          </TouchableOpacity>
-        </View>
+          <View style={styles.markCTAArrow}>
+            <Ionicons name="arrow-forward" size={18} color="#4F46E5" />
+          </View>
+        </TouchableOpacity>
 
         {/* Top 5 Students Leaderboard Section */}
         {stats.topStudents && stats.topStudents.length > 0 && (
@@ -297,74 +278,44 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
   },
-  ctaGrid: {
-    marginTop: 8,
-    gap: 10,
-  },
   markCTA: {
+    marginTop: 8,
     backgroundColor: '#4F46E5',
     borderRadius: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 18,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
     borderColor: '#6366F1',
   },
-  holidayCTA: {
-    backgroundColor: '#7C3AED',
-    borderRadius: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 18,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: '#8B5CF6',
-  },
   markCTAContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 14,
   },
   markCTAIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     backgroundColor: 'rgba(255, 255, 255, 0.18)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  holidayCTAIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.22)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   markCTATitle: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '800',
+    letterSpacing: 0.3,
   },
-  markCTASub: {
-    color: '#C7D2FE',
-    fontSize: 11,
-    fontWeight: '500',
-    marginTop: 1,
-  },
-  holidayCTATitle: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  holidayCTASub: {
-    color: '#DDD6FE',
-    fontSize: 11,
-    fontWeight: '500',
-    marginTop: 1,
+  markCTAArrow: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   topCard: {
     marginTop: 16,
