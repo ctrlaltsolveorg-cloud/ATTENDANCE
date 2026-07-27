@@ -31,7 +31,7 @@ export default function DashboardScreen({
 
   return (
     <View style={styles.container}>
-      <Header branchInfo={branchInfo} onReset={onResetData} onOpenCloudConfig={onOpenCloudConfig} />
+      <Header branchInfo={branchInfo} onReset={onResetData} />
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
 

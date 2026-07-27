@@ -25,6 +25,38 @@ export default function StudentListScreen({
   const [nameInput, setNameInput] = useState('');
   const [rollInput, setRollInput] = useState('');
 
+  // Password Protection State
+  const [passcodeModalVisible, setPasscodeModalVisible] = useState(false);
+  const [passcodeInput, setPasscodeInput] = useState('');
+  const [passcodeError, setPasscodeError] = useState('');
+  const [pendingAction, setPendingAction] = useState(null);
+
+  const triggerProtectedAction = (action) => {
+    setPendingAction(action);
+    setPasscodeInput('');
+    setPasscodeError('');
+    setPasscodeModalVisible(true);
+  };
+
+  const handleVerifyPasscode = () => {
+    if (passcodeInput.trim() === '1234') {
+      setPasscodeModalVisible(false);
+      setPasscodeError('');
+      const action = pendingAction;
+      setPendingAction(null);
+
+      if (action?.type === 'add') {
+        handleOpenAdd();
+      } else if (action?.type === 'edit') {
+        handleOpenEdit(action.student);
+      } else if (action?.type === 'delete') {
+        handleDelete(action.student);
+      }
+    } else {
+      setPasscodeError('Incorrect Password! Authorized faculty/admin only.');
+    }
+  };
+
   const getPctColor = (pct) => {
     if (pct >= 75) return '#10B981';
     if (pct >= 60) return '#F59E0B';
@@ -104,8 +136,12 @@ export default function StudentListScreen({
             <Text style={styles.headerSub}>Mechatronics Engineering ({students.length} Total)</Text>
           </View>
 
-          <TouchableOpacity style={styles.addBtn} onPress={handleOpenAdd} activeOpacity={0.8}>
-            <Ionicons name="person-add" size={16} color="#FFFFFF" />
+          <TouchableOpacity
+            style={styles.addBtn}
+            onPress={() => triggerProtectedAction({ type: 'add' })}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="lock-closed" size={14} color="#FFFFFF" />
             <Text style={styles.addBtnText}>Add Student</Text>
           </TouchableOpacity>
         </View>
@@ -145,28 +181,24 @@ export default function StudentListScreen({
                 </View>
                 <View style={styles.infoCol}>
                   <Text style={styles.studentName}>{item.name}</Text>
-
-                  <View style={styles.statsRow}>
-                    <Text style={styles.statLabel}>
-                      Attended: <Text style={{ color: '#F8FAFC', fontWeight: '700' }}>{studentStat.present}</Text> / {studentStat.total} • <Ionicons name="bar-chart" size={12} color="#818CF8" /> <Text style={{ color: '#818CF8' }}>Graph</Text>
-                    </Text>
-                  </View>
                 </View>
               </TouchableOpacity>
 
-              <View style={styles.cardRight}>
-                <View style={[styles.pctBadge, { backgroundColor: `${statusColor}20`, borderColor: statusColor }]}>
-                  <Text style={[styles.pctText, { color: statusColor }]}>{pct}%</Text>
-                </View>
-
-                <View style={styles.actionsRow}>
-                  <TouchableOpacity onPress={() => handleOpenEdit(item)}>
-                    <Ionicons name="pencil" size={16} color="#94A3B8" />
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => handleDelete(item)}>
-                    <Ionicons name="trash-outline" size={16} color="#EF4444" />
-                  </TouchableOpacity>
-                </View>
+              <View style={styles.actionsRow}>
+                <TouchableOpacity
+                  style={styles.actionBtnIcon}
+                  onPress={() => triggerProtectedAction({ type: 'edit', student: item })}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="pencil" size={16} color="#94A3B8" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.actionBtnIcon}
+                  onPress={() => triggerProtectedAction({ type: 'delete', student: item })}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="trash-outline" size={16} color="#EF4444" />
+                </TouchableOpacity>
               </View>
             </View>
           );
@@ -209,6 +241,55 @@ export default function StudentListScreen({
 
               <TouchableOpacity style={styles.saveModalBtn} onPress={handleSaveModal}>
                 <Text style={styles.saveModalBtnText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Password Authentication Modal for Admin Protection */}
+      <Modal visible={passcodeModalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.lockIconCircle}>
+              <Ionicons name="lock-closed" size={28} color="#818CF8" />
+            </View>
+
+            <Text style={styles.modalTitle}>Admin Password Required</Text>
+            <Text style={styles.passcodeSub}>
+              Editing student records is password protected. Enter Admin PIN (Default: 1234) to proceed:
+            </Text>
+
+            <TextInput
+              style={[styles.modalInput, passcodeError ? { borderColor: '#EF4444' } : null]}
+              value={passcodeInput}
+              onChangeText={(text) => {
+                setPasscodeInput(text);
+                setPasscodeError('');
+              }}
+              placeholder="Enter Admin PIN (1234)"
+              placeholderTextColor="#64748B"
+              secureTextEntry
+              keyboardType="number-pad"
+            />
+
+            {passcodeError ? (
+              <Text style={styles.passcodeErrorText}>{passcodeError}</Text>
+            ) : null}
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={() => {
+                  setPasscodeModalVisible(false);
+                  setPendingAction(null);
+                }}
+              >
+                <Text style={styles.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.saveModalBtn} onPress={handleVerifyPasscode}>
+                <Text style={styles.saveModalBtnText}>Unlock & Proceed 🔓</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -398,5 +479,29 @@ const styles = StyleSheet.create({
   saveModalBtnText: {
     color: '#FFFFFF',
     fontWeight: '700',
+  },
+  lockIconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: 'rgba(99, 102, 241, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  passcodeSub: {
+    color: '#94A3B8',
+    fontSize: 13,
+    marginBottom: 14,
+    lineHeight: 18,
+  },
+  passcodeErrorText: {
+    color: '#F87171',
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 8,
+  },
+  actionBtnIcon: {
+    padding: 6,
   },
 });
