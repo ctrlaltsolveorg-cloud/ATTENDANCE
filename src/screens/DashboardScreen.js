@@ -1,16 +1,59 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
   Text,
   ScrollView,
   TouchableOpacity,
-  FlatList,
+  TextInput,
+  Modal,
+  Alert,
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getTheme } from '../theme/theme';
 import Header from '../components/Header';
+import PasswordModal from '../components/PasswordModal';
+import {
+  getNotice,
+  saveNotice,
+  getRoutine,
+  saveRoutine,
+  DEFAULT_NOTICE,
+  DEFAULT_WEEKLY_ROUTINE,
+} from '../services/storage';
+
+const getCurrentDayName = () => {
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  return days[new Date().getDay()];
+};
+
+const isPeriodOngoing = (timeStr) => {
+  try {
+    const now = new Date();
+    const currentMin = now.getHours() * 60 + now.getMinutes();
+
+    const parts = timeStr.split('-');
+    if (parts.length !== 2) return false;
+
+    const parseMin = (tStr) => {
+      tStr = tStr.trim();
+      const isPM = tStr.toUpperCase().includes('PM');
+      const clean = tStr.replace(/(AM|PM)/i, '').trim();
+      let [h, m] = clean.split(':').map(Number);
+      if (isPM && h !== 12) h += 12;
+      if (!isPM && h === 12) h = 0;
+      return h * 60 + m;
+    };
+
+    const startMin = parseMin(parts[0]);
+    const endMin = parseMin(parts[1]);
+
+    return currentMin >= startMin && currentMin < endMin;
+  } catch (e) {
+    return false;
+  }
+};
 
 export default function DashboardScreen({
   branchInfo,
@@ -28,6 +71,81 @@ export default function DashboardScreen({
   const currentTheme = getTheme(themeMode);
   const colors = currentTheme.colors;
   const isLight = themeMode === 'light';
+
+  // CR Notice Board & Routine State
+  const [noticeText, setNoticeText] = useState(DEFAULT_NOTICE);
+  const [routineObj, setRoutineObj] = useState(DEFAULT_WEEKLY_ROUTINE);
+  const [editingNotice, setEditingNotice] = useState(false);
+  const [newNoticeInput, setNewNoticeInput] = useState('');
+  
+  // Room Editing State
+  const [editingRoomSlot, setEditingRoomSlot] = useState(null); // { day, index, room }
+  const [newRoomInput, setNewRoomInput] = useState('');
+
+  // Password Protection Modal
+  const [passcodeModalVisible, setPasscodeModalVisible] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null); // { type: 'editNotice' | 'editRoom', data }
+
+  useEffect(() => {
+    loadNoticeAndRoutine();
+  }, []);
+
+  const loadNoticeAndRoutine = async () => {
+    const n = await getNotice();
+    const r = await getRoutine();
+    setNoticeText(n || DEFAULT_NOTICE);
+    setRoutineObj(r || DEFAULT_WEEKLY_ROUTINE);
+  };
+
+  const triggerProtectedCRAction = (action) => {
+    setPendingAction(action);
+    setPasscodeModalVisible(true);
+  };
+
+  const handlePasscodeSuccess = () => {
+    setPasscodeModalVisible(false);
+    if (!pendingAction) return;
+
+    if (pendingAction.type === 'editNotice') {
+      setNewNoticeInput(noticeText);
+      setEditingNotice(true);
+    } else if (pendingAction.type === 'editRoom') {
+      setEditingRoomSlot(pendingAction.data);
+      setNewRoomInput(pendingAction.data.room);
+    }
+    setPendingAction(null);
+  };
+
+  const handleSaveNotice = async () => {
+    if (!newNoticeInput.trim()) {
+      Alert.alert('Empty Notice', 'Please enter notice content.');
+      return;
+    }
+    await saveNotice(newNoticeInput.trim());
+    setNoticeText(newNoticeInput.trim());
+    setEditingNotice(false);
+    Alert.alert('Notice Updated', 'CR Notice Board has been updated successfully!');
+  };
+
+  const handleSaveRoomNumber = async () => {
+    if (!editingRoomSlot || !newRoomInput.trim()) return;
+
+    const { day, index } = editingRoomSlot;
+    const updatedRoutine = { ...routineObj };
+    if (updatedRoutine[day] && updatedRoutine[day][index]) {
+      updatedRoutine[day][index] = {
+        ...updatedRoutine[day][index],
+        room: newRoomInput.trim(),
+      };
+      await saveRoutine(updatedRoutine);
+      setRoutineObj(updatedRoutine);
+      Alert.alert('Room Updated', `Room number updated to ${newRoomInput.trim()}`);
+    }
+    setEditingRoomSlot(null);
+  };
+
+  const todayDayName = getCurrentDayName();
+  const todayClasses = routineObj[todayDayName] || routineObj['Monday'];
 
   const getPctColor = (pct) => {
     if (pct >= 75) return '#10B981'; // Emerald Green
@@ -99,6 +217,99 @@ export default function DashboardScreen({
             <Ionicons name="arrow-forward" size={18} color="#4F46E5" />
           </View>
         </TouchableOpacity>
+
+        {/* 📢 CR Important Notice Board Banner Card */}
+        <View style={[styles.noticeCard, { backgroundColor: isLight ? '#EEF2FF' : 'rgba(30, 20, 60, 0.85)', borderColor: isLight ? '#C7D2FE' : '#8B5CF6', boxShadow: colors.cardShadow }]}>
+          <View style={styles.noticeHeader}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Ionicons name="megaphone" size={18} color={isLight ? '#4F46E5' : '#C084FC'} />
+              <Text style={[styles.noticeTitle, { color: isLight ? '#3730A3' : '#F8FAFC' }]}>CR Important Announcement</Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.crEditBtn, { backgroundColor: isLight ? '#E0E7FF' : 'rgba(168, 85, 247, 0.2)', borderColor: isLight ? '#C7D2FE' : 'rgba(168, 85, 247, 0.4)' }]}
+              onPress={() => triggerProtectedCRAction({ type: 'editNotice' })}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="lock-closed" size={12} color={isLight ? '#4F46E5' : '#C084FC'} />
+              <Text style={[styles.crEditText, { color: isLight ? '#4F46E5' : '#C084FC' }]}>Edit Notice</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={[styles.noticeContentText, { color: isLight ? '#312E81' : '#E9D5FF' }]}>
+            {noticeText}
+          </Text>
+        </View>
+
+        {/* 🏫 Classes Going On / Today's Routine Schedule Card */}
+        <View style={[styles.routineCard, { backgroundColor: colors.bgCard, borderColor: colors.glassBorder, boxShadow: colors.cardShadow }]}>
+          <View style={styles.routineHeader}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Ionicons name="time" size={20} color={colors.primary} />
+              <Text style={[styles.routineTitle, { color: colors.textMain }]}>Today's Live Classes & Schedule</Text>
+            </View>
+            <View style={[styles.dayBadge, { backgroundColor: isLight ? '#EEF2FF' : 'rgba(15, 23, 42, 0.8)' }]}>
+              <Text style={[styles.dayBadgeText, { color: colors.primary }]}>{todayDayName}</Text>
+            </View>
+          </View>
+          <Text style={[styles.routineSub, { color: colors.textSub }]}>Purnea College of Engg. Mechatronics 3rd Sem Routine (Default Room 202/123):</Text>
+
+          <View style={{ gap: 10, marginTop: 12 }}>
+            {todayClasses.map((item, index) => {
+              const liveOngoing = isPeriodOngoing(item.time);
+
+              return (
+                <View
+                  key={index}
+                  style={[
+                    styles.periodRow,
+                    {
+                      backgroundColor: liveOngoing ? (isLight ? '#ECFDF5' : 'rgba(6, 78, 59, 0.4)') : colors.bgGlass,
+                      borderColor: liveOngoing ? '#10B981' : colors.glassBorder,
+                    },
+                  ]}
+                >
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <View style={[styles.periodBadge, { backgroundColor: isLight ? '#EEF2FF' : 'rgba(15, 23, 42, 0.8)' }]}>
+                        <Text style={[styles.periodBadgeText, { color: colors.primary }]}>P-{item.period}</Text>
+                      </View>
+                      <Text style={[styles.periodTime, { color: colors.textSub }]}>{item.time}</Text>
+
+                      {liveOngoing && (
+                        <View style={styles.livePill}>
+                          <View style={styles.liveDot} />
+                          <Text style={styles.liveText}>ONGOING NOW</Text>
+                        </View>
+                      )}
+                    </View>
+
+                    <Text style={[styles.periodSubject, { color: colors.textMain }]}>
+                      {item.name} ({item.code})
+                    </Text>
+                    <Text style={[styles.periodFaculty, { color: colors.textSub }]}>
+                      Faculty: {item.faculty}
+                    </Text>
+                  </View>
+
+                  <View style={{ alignItems: 'flex-end', justifyContent: 'space-between', height: '100%' }}>
+                    <View style={[styles.roomPill, { backgroundColor: isLight ? '#FEF3C7' : 'rgba(245, 158, 11, 0.2)', borderColor: isLight ? '#FDE68A' : '#F59E0B' }]}>
+                      <Ionicons name="location" size={12} color="#D97706" />
+                      <Text style={styles.roomPillText}>Room {item.room}</Text>
+                    </View>
+
+                    <TouchableOpacity
+                      style={styles.changeRoomBtn}
+                      onPress={() => triggerProtectedCRAction({ type: 'editRoom', data: { day: todayDayName, index, room: item.room, name: item.name } })}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons name="create-outline" size={12} color={colors.primary} />
+                      <Text style={[styles.changeRoomText, { color: colors.primary }]}>Change Room</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        </View>
 
         {/* Top 5 Students Leaderboard Section */}
         {stats?.topStudents && stats.topStudents.length > 0 && (
@@ -222,6 +433,111 @@ export default function DashboardScreen({
           })
         )}
       </ScrollView>
+
+      {/* Modal 1: Edit Notice Modal */}
+      <Modal visible={editingNotice} transparent animationType="slide" onRequestClose={() => setEditingNotice(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+          <View style={{ width: '100%', maxWidth: 440, backgroundColor: colors.bgGlassElevated, borderColor: colors.glassBorder, borderWidth: 1, borderRadius: 20, padding: 20 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <Text style={{ fontSize: 17, fontWeight: '800', color: colors.textMain }}>📢 Edit CR Announcement</Text>
+              <TouchableOpacity onPress={() => setEditingNotice(false)}>
+                <Ionicons name="close" size={22} color={colors.textSub} />
+              </TouchableOpacity>
+            </View>
+
+            <TextInput
+              style={{
+                backgroundColor: colors.bgGlass,
+                borderColor: colors.glassBorder,
+                borderWidth: 1,
+                borderRadius: 12,
+                padding: 12,
+                color: colors.textMain,
+                fontSize: 14,
+                minHeight: 90,
+                textAlignVertical: 'top',
+                marginBottom: 16,
+              }}
+              multiline
+              value={newNoticeInput}
+              onChangeText={setNewNoticeInput}
+              placeholder="Write important announcement message for students..."
+              placeholderTextColor={colors.textMuted}
+            />
+
+            <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'flex-end' }}>
+              <TouchableOpacity
+                style={{ paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10, backgroundColor: colors.bgGlass, borderColor: colors.glassBorder, borderWidth: 1 }}
+                onPress={() => setEditingNotice(false)}
+              >
+                <Text style={{ color: colors.textSub, fontWeight: '600' }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{ paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10, backgroundColor: colors.primary }}
+                onPress={handleSaveNotice}
+              >
+                <Text style={{ color: '#FFFFFF', fontWeight: '800' }}>Save Notice</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal 2: Edit Room Number Modal */}
+      <Modal visible={Boolean(editingRoomSlot)} transparent animationType="fade" onRequestClose={() => setEditingRoomSlot(null)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+          <View style={{ width: '100%', maxWidth: 400, backgroundColor: colors.bgGlassElevated, borderColor: colors.glassBorder, borderWidth: 1, borderRadius: 20, padding: 20 }}>
+            <Text style={{ fontSize: 16, fontWeight: '800', color: colors.textMain, marginBottom: 4 }}>
+              ✏️ Update Room Number
+            </Text>
+            <Text style={{ fontSize: 13, color: colors.textSub, marginBottom: 14 }}>
+              {editingRoomSlot?.name}
+            </Text>
+
+            <TextInput
+              style={{
+                backgroundColor: colors.bgGlass,
+                borderColor: colors.glassBorder,
+                borderWidth: 1,
+                borderRadius: 10,
+                paddingHorizontal: 14,
+                paddingVertical: 10,
+                color: colors.textMain,
+                fontSize: 15,
+                fontWeight: '700',
+                marginBottom: 16,
+              }}
+              value={newRoomInput}
+              onChangeText={setNewRoomInput}
+              placeholder="e.g. Room 115 / Lab 3"
+              placeholderTextColor={colors.textMuted}
+            />
+
+            <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'flex-end' }}>
+              <TouchableOpacity
+                style={{ paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10, backgroundColor: colors.bgGlass, borderColor: colors.glassBorder, borderWidth: 1 }}
+                onPress={() => setEditingRoomSlot(null)}
+              >
+                <Text style={{ color: colors.textSub, fontWeight: '600' }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{ paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10, backgroundColor: colors.primary }}
+                onPress={handleSaveRoomNumber}
+              >
+                <Text style={{ color: '#FFFFFF', fontWeight: '800' }}>Update Room</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* CR Security Passcode Modal */}
+      <PasswordModal
+        visible={passcodeModalVisible}
+        onClose={() => setPasscodeModalVisible(false)}
+        onSuccess={handlePasscodeSuccess}
+        title="CR Security Passcode"
+      />
     </View>
   );
 }
@@ -537,8 +853,142 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   historyPct: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: 13,
+    fontWeight: '800',
     marginTop: 2,
+  },
+  noticeCard: {
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+  },
+  noticeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  noticeTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  crEditBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  crEditText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  noticeContentText: {
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 18,
+  },
+  routineCard: {
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+  },
+  routineHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  routineTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  routineSub: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  dayBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  dayBadgeText: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  periodRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  periodBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  periodBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  periodTime: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  livePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10B981',
+  },
+  liveText: {
+    color: '#10B981',
+    fontSize: 9,
+    fontWeight: '900',
+  },
+  periodSubject: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  periodFaculty: {
+    fontSize: 11,
+    marginTop: 2,
+  },
+  roomPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  roomPillText: {
+    color: '#D97706',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  changeRoomBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 8,
+  },
+  changeRoomText: {
+    fontSize: 11,
+    fontWeight: '700',
   },
 });

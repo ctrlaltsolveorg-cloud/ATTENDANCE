@@ -7,6 +7,66 @@ const KEYS = {
   STUDENTS: '@pce_attendance_students',
   SUBJECTS: '@pce_attendance_subjects',
   ATTENDANCE: '@pce_attendance_records',
+  NOTICE: '@pce_attendance_notice',
+  ROUTINE: '@pce_attendance_routine',
+};
+
+export const DEFAULT_NOTICE = "📢 Today's Announcement: SOM class will be held in Room 115 for Hackathon Seminar orientation.";
+
+export const DEFAULT_WEEKLY_ROUTINE = {
+  Monday: [
+    { period: 'I', time: '10:00 AM - 10:50 AM', code: 'FM&M', name: 'Fluid Mechanics & Machinery', faculty: 'RC Sahani', room: '123' },
+    { period: 'II', time: '10:50 AM - 11:40 AM', code: 'M-III', name: 'Eng. Mathematics III', faculty: 'Dr. Shwetambara', room: '202' },
+    { period: 'III', time: '11:40 AM - 12:30 PM', code: 'EM', name: 'Eng. Mechanics', faculty: 'Prof. Ravi Anand', room: '202' },
+    { period: 'IV', time: '12:30 PM - 01:20 PM', code: 'UHV', name: 'Universal Human Value', faculty: 'Prof. Uday Kr. Singh', room: '202' },
+    { period: 'RECESS', time: '01:20 PM - 02:00 PM', code: 'RECESS', name: 'Lunch Break / Recess', faculty: '-', room: 'Cafeteria' },
+    { period: 'V', time: '02:00 PM - 04:00 PM', code: 'EM LAB', name: 'Eng. Mechanics Lab (161301P)', faculty: 'Prof. Md. Saquib Akhtar', room: 'EM Lab' },
+    { period: 'VI', time: '04:00 PM - 04:50 PM', code: 'IKS', name: 'Indian Knowledge System', faculty: 'Prof. Raushan Kumar', room: '202' },
+  ],
+  Tuesday: [
+    { period: 'I', time: '10:00 AM - 10:50 AM', code: 'SOM', name: 'Strength of Material', faculty: 'Prof. Ratnesh Kumar', room: '123' },
+    { period: 'II', time: '10:50 AM - 11:40 AM', code: 'M-III', name: 'Eng. Mathematics III', faculty: 'Dr. Shwetambara', room: '202' },
+    { period: 'III', time: '11:40 AM - 12:30 PM', code: 'BM', name: 'Basic Mechatronics', faculty: 'Prof. Abhimanyu Kumar', room: '123' },
+    { period: 'IV', time: '12:30 PM - 01:20 PM', code: 'UHV', name: 'Universal Human Value', faculty: 'Prof. Uday Kr. Singh', room: '202' },
+    { period: 'RECESS', time: '01:20 PM - 02:00 PM', code: 'RECESS', name: 'Lunch Break / Recess', faculty: '-', room: 'Cafeteria' },
+    { period: 'V', time: '02:00 PM - 04:00 PM', code: 'SPOKEN', name: 'Spoken Tutorial Session', faculty: 'Dept Faculty', room: 'Language Lab' },
+  ],
+  Wednesday: [
+    { period: 'I', time: '10:00 AM - 10:50 AM', code: 'BM', name: 'Basic Mechatronics', faculty: 'Prof. Abhimanyu Kumar', room: '123' },
+    { period: 'II', time: '10:50 AM - 11:40 AM', code: 'FM&M', name: 'Fluid Mechanics & Machinery', faculty: 'RC Sahani', room: '123' },
+    { period: 'III', time: '11:40 AM - 12:30 PM', code: 'M-III', name: 'Eng. Mathematics III', faculty: 'Dr. Shwetambara', room: '202' },
+    { period: 'IV', time: '12:30 PM - 01:20 PM', code: 'UHV', name: 'Universal Human Value', faculty: 'Prof. Uday Kr. Singh', room: '202' },
+    { period: 'RECESS', time: '01:20 PM - 02:00 PM', code: 'RECESS', name: 'Lunch Break / Recess', faculty: '-', room: 'Cafeteria' },
+    { period: 'V', time: '02:00 PM - 04:00 PM', code: 'FM&M LAB', name: 'Fluid Mechanics Lab (161302P)', faculty: 'RC Sahani / Bipin Kr. Sharma', room: 'FM&M Lab' },
+    { period: 'VI', time: '04:00 PM - 04:50 PM', code: 'EM', name: 'Eng. Mechanics', faculty: 'Prof. Md. Saquib Akhtar', room: '202' },
+  ],
+  Thursday: [
+    { period: 'I', time: '10:00 AM - 10:50 AM', code: 'EM', name: 'Eng. Mechanics', faculty: 'Prof. Md. Saquib Akhtar', room: '202' },
+    { period: 'II', time: '10:50 AM - 11:40 AM', code: 'M-III', name: 'Eng. Mathematics III', faculty: 'Dr. Shwetambara', room: '202' },
+    { period: 'III', time: '11:40 AM - 12:30 PM', code: 'SOM', name: 'Strength of Material', faculty: 'Prof. Ratnesh Kumar', room: '123' },
+    { period: 'IV', time: '12:30 PM - 01:20 PM', code: 'IKS', name: 'Indian Knowledge System', faculty: 'RC Sahani', room: '202' },
+    { period: 'RECESS', time: '01:20 PM - 02:00 PM', code: 'RECESS', name: 'Lunch Break / Recess', faculty: '-', room: 'Cafeteria' },
+    { period: 'V', time: '02:00 PM - 04:00 PM', code: 'SPOKEN', name: 'Spoken Tutorial Session', faculty: 'Dept Faculty', room: 'Language Lab' },
+  ],
+  Friday: [
+    { period: 'I', time: '10:00 AM - 10:50 AM', code: 'EM', name: 'Eng. Mechanics', faculty: 'Prof. Ravi Anand', room: '202' },
+    { period: 'II', time: '10:50 AM - 11:40 AM', code: 'BM', name: 'Basic Mechatronics', faculty: 'Prof. Dheeraj Kumar', room: '123' },
+    { period: 'III', time: '11:40 AM - 12:30 PM', code: 'SPOKEN', name: 'Spoken Tutorial', faculty: 'Dept Faculty', room: 'Language Lab' },
+    { period: 'IV', time: '12:30 PM - 01:20 PM', code: 'SPOKEN', name: 'Spoken Tutorial', faculty: 'Dept Faculty', room: 'Language Lab' },
+    { period: 'RECESS', time: '01:20 PM - 02:00 PM', code: 'RECESS', name: 'Lunch Break / Recess', faculty: '-', room: 'Cafeteria' },
+    { period: 'V', time: '02:00 PM - 04:00 PM', code: 'SOM LAB', name: 'Strength of Material Lab (161305P)', faculty: 'Prof. Payal Priya / Asif Ansari', room: 'SOM Lab' },
+  ],
+  Saturday: [
+    { period: 'I', time: '10:00 AM - 10:50 AM', code: 'FM&M', name: 'Fluid Mechanics & Machinery', faculty: 'RC Sahani', room: '123' },
+    { period: 'II', time: '10:50 AM - 11:40 AM', code: 'SOM', name: 'Strength of Material', faculty: 'Prof. Ratnesh Kumar', room: '123' },
+    { period: 'III', time: '11:40 AM - 12:30 PM', code: 'IKS', name: 'Indian Knowledge System', faculty: 'Prof. Uday Kr. Singh', room: '202' },
+    { period: 'IV', time: '12:30 PM - 01:20 PM', code: 'LIBRARY', name: 'Library / Self Study', faculty: 'Library Incharge', room: 'Central Library' },
+    { period: 'RECESS', time: '01:20 PM - 02:00 PM', code: 'RECESS', name: 'Lunch Break / Recess', faculty: '-', room: 'Cafeteria' },
+    { period: 'V', time: '02:00 PM - 04:00 PM', code: 'LIBRARY', name: 'Library / Self Study', faculty: 'Library Incharge', room: 'Central Library' },
+  ],
+  Sunday: [
+    { period: 'OFF', time: 'All Day', code: 'HOLIDAY', name: 'Sunday Off', faculty: '-', room: '-' },
+  ],
 };
 
 /**
@@ -714,9 +774,6 @@ export const generatePrintableHTMLRegister = (students, subjects, records, branc
           margin-top: 30px;
           display: flex;
           justify-content: space-between;
-          font-size: 10px;
-          font-weight: bold;
-        }
       </style>
     </head>
     <body>
@@ -724,4 +781,38 @@ export const generatePrintableHTMLRegister = (students, subjects, records, branc
     </body>
     </html>
   `;
+};
+
+export const getNotice = async () => {
+  try {
+    const data = await AsyncStorage.getItem(KEYS.NOTICE);
+    return data ? JSON.parse(data) : DEFAULT_NOTICE;
+  } catch (e) {
+    return DEFAULT_NOTICE;
+  }
+};
+
+export const saveNotice = async (noticeText) => {
+  try {
+    await AsyncStorage.setItem(KEYS.NOTICE, JSON.stringify(noticeText));
+  } catch (e) {
+    console.error('Error saving notice:', e);
+  }
+};
+
+export const getRoutine = async () => {
+  try {
+    const data = await AsyncStorage.getItem(KEYS.ROUTINE);
+    return data ? JSON.parse(data) : DEFAULT_WEEKLY_ROUTINE;
+  } catch (e) {
+    return DEFAULT_WEEKLY_ROUTINE;
+  }
+};
+
+export const saveRoutine = async (routineObj) => {
+  try {
+    await AsyncStorage.setItem(KEYS.ROUTINE, JSON.stringify(routineObj));
+  } catch (e) {
+    console.error('Error saving routine:', e);
+  }
 };
