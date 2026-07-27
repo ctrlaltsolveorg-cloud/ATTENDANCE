@@ -28,13 +28,13 @@ const getCurrentDayName = () => {
   return days[new Date().getDay()];
 };
 
-const isPeriodOngoing = (timeStr) => {
+const getPeriodStatus = (timeStr) => {
   try {
     const now = new Date();
-    const currentMin = now.getHours() * 60 + now.getMinutes();
+    const currentMin = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
 
     const parts = timeStr.split('-');
-    if (parts.length !== 2) return false;
+    if (parts.length !== 2) return { isOngoing: false, isCompleted: false, pct: 0, minsRemaining: 0 };
 
     const parseMin = (tStr) => {
       tStr = tStr.trim();
@@ -48,10 +48,23 @@ const isPeriodOngoing = (timeStr) => {
 
     const startMin = parseMin(parts[0]);
     const endMin = parseMin(parts[1]);
+    const totalDuration = endMin - startMin;
 
-    return currentMin >= startMin && currentMin < endMin;
+    if (currentMin < startMin) {
+      return { isOngoing: false, isCompleted: false, pct: 0, minsRemaining: Math.ceil(startMin - currentMin) };
+    }
+
+    if (currentMin >= endMin) {
+      return { isOngoing: false, isCompleted: true, pct: 100, minsRemaining: 0 };
+    }
+
+    const elapsed = currentMin - startMin;
+    const pct = Math.min(100, Math.max(1, Math.round((elapsed / totalDuration) * 100)));
+    const minsRemaining = Math.max(1, Math.ceil(endMin - currentMin));
+
+    return { isOngoing: true, isCompleted: false, pct, minsRemaining };
   } catch (e) {
-    return false;
+    return { isOngoing: false, isCompleted: false, pct: 0, minsRemaining: 0 };
   }
 };
 
@@ -86,8 +99,16 @@ export default function DashboardScreen({
   const [passcodeModalVisible, setPasscodeModalVisible] = useState(false);
   const [pendingAction, setPendingAction] = useState(null); // { type: 'editNotice' | 'editRoom', data }
 
+  // Live timer tick for real-time progress bar fill
+  const [, setTick] = useState(0);
+
   useEffect(() => {
     loadNoticeAndRoutine();
+
+    const timer = setInterval(() => {
+      setTick((prev) => prev + 1);
+    }, 5000);
+    return () => clearInterval(timer);
   }, []);
 
   const loadNoticeAndRoutine = async () => {
@@ -253,7 +274,7 @@ export default function DashboardScreen({
 
           <View style={{ gap: 10, marginTop: 12 }}>
             {todayClasses.map((item, index) => {
-              const liveOngoing = isPeriodOngoing(item.time);
+              const status = getPeriodStatus(item.time);
 
               return (
                 <View
@@ -261,8 +282,16 @@ export default function DashboardScreen({
                   style={[
                     styles.periodRow,
                     {
-                      backgroundColor: liveOngoing ? (isLight ? '#ECFDF5' : 'rgba(6, 78, 59, 0.4)') : colors.bgGlass,
-                      borderColor: liveOngoing ? '#10B981' : colors.glassBorder,
+                      backgroundColor: status.isOngoing
+                        ? (isLight ? '#ECFDF5' : 'rgba(6, 78, 59, 0.4)')
+                        : status.isCompleted
+                        ? (isLight ? '#F8FAFC' : 'rgba(15, 23, 42, 0.3)')
+                        : colors.bgGlass,
+                      borderColor: status.isOngoing
+                        ? '#10B981'
+                        : status.isCompleted
+                        ? (isLight ? '#E2E8F0' : '#1E293B')
+                        : colors.glassBorder,
                     },
                   ]}
                 >
@@ -273,17 +302,34 @@ export default function DashboardScreen({
                       </View>
                       <Text style={[styles.periodTime, { color: colors.textSub }]}>{item.time}</Text>
 
-                      {liveOngoing && (
+                      {status.isOngoing ? (
                         <View style={styles.livePill}>
                           <View style={styles.liveDot} />
-                          <Text style={styles.liveText}>ONGOING NOW</Text>
+                          <Text style={styles.liveText}>LIVE {status.pct}%</Text>
                         </View>
-                      )}
+                      ) : status.isCompleted ? (
+                        <View style={[styles.livePill, { backgroundColor: isLight ? '#F1F5F9' : 'rgba(100, 116, 139, 0.15)' }]}>
+                          <Ionicons name="checkmark-circle" size={10} color="#64748B" />
+                          <Text style={[styles.liveText, { color: '#64748B' }]}>DONE</Text>
+                        </View>
+                      ) : null}
                     </View>
 
                     <Text style={[styles.periodSubject, { color: colors.textMain }]}>
                       {item.code} • {item.faculty}
                     </Text>
+
+                    {/* Real-time Filling Progress Bar */}
+                    {status.isOngoing && (
+                      <View style={{ marginTop: 8, paddingRight: 10 }}>
+                        <View style={{ height: 6, backgroundColor: isLight ? '#A7F3D0' : 'rgba(6, 78, 59, 0.8)', borderRadius: 3, overflow: 'hidden' }}>
+                          <View style={{ height: '100%', width: `${status.pct}%`, backgroundColor: '#10B981', borderRadius: 3 }} />
+                        </View>
+                        <Text style={{ fontSize: 10, color: isLight ? '#047857' : '#34D399', fontWeight: '800', marginTop: 3 }}>
+                          ⚡ {status.pct}% filled • {status.minsRemaining} mins remaining
+                        </Text>
+                      </View>
+                    )}
                   </View>
 
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
