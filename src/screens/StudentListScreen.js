@@ -165,7 +165,7 @@ export default function StudentListScreen({
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => {
-          const studentStat = stats.studentStats[item.id] || { present: 0, total: 0 };
+          const studentStat = (stats?.studentStats && stats.studentStats[item.id]) || { present: 0, total: 0 };
           const pct = studentStat.total > 0 ? Math.round((studentStat.present / studentStat.total) * 100) : 100;
           const statusColor = getPctColor(pct);
 

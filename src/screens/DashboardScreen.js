@@ -90,7 +90,7 @@ export default function DashboardScreen({
         </TouchableOpacity>
 
         {/* Top 5 Students Leaderboard Section */}
-        {stats.topStudents && stats.topStudents.length > 0 && (
+        {stats?.topStudents && stats.topStudents.length > 0 && (
           <View style={styles.topCard}>
             <View style={styles.topHeader}>
               <Ionicons name="trophy" size={20} color="#F59E0B" />
@@ -128,7 +128,7 @@ export default function DashboardScreen({
         </View>
 
         {subjects.map((sub) => {
-          const subStat = stats.subjectStats[sub.id] || { sessions: 0, present: 0, totalPossible: 0 };
+          const subStat = (stats?.subjectStats && stats.subjectStats[sub.id]) || { sessions: 0, present: 0, totalPossible: 0 };
           const pct = subStat.totalPossible > 0 ? Math.round((subStat.present / subStat.totalPossible) * 100) : 0;
           const barColor = getPctColor(pct);
 

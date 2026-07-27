@@ -204,7 +204,7 @@ export default function ReportsScreen({ students, subjects, records, stats, onSe
         {selectedTab === 'low' && (
           <View>
             <Text style={styles.sectionHeader}>{"Subject-Wise Detained Papers Shortage List (< 75%)"}</Text>
-            {stats.lowAttendanceStudents.length === 0 ? (
+            {(!stats?.lowAttendanceStudents || stats.lowAttendanceStudents.length === 0) ? (
               <View style={styles.emptyCard}>
                 <Ionicons name="checkmark-circle" size={40} color="#10B981" />
                 <Text style={styles.emptyTitle}>All Clear!</Text>
@@ -255,7 +255,7 @@ export default function ReportsScreen({ students, subjects, records, stats, onSe
               
               <View style={styles.overviewRingRow}>
                 <View style={styles.ringBadge}>
-                  <Text style={styles.ringNum}>{students.length - stats.lowAttendanceStudents.length}</Text>
+                  <Text style={styles.ringNum}>{students.length - (stats?.lowAttendanceStudents?.length || 0)}</Text>
                   <Text style={styles.ringSub}>All Pass</Text>
                 </View>
                 <View style={{ flex: 1, gap: 6 }}>
@@ -263,10 +263,10 @@ export default function ReportsScreen({ students, subjects, records, stats, onSe
                     • <Text style={{ color: '#F8FAFC', fontWeight: '700' }}>{students.length}</Text> Registered Mechatronics Students
                   </Text>
                   <Text style={styles.overviewText}>
-                    • <Text style={{ color: '#10B981', fontWeight: '700' }}>{students.length - stats.lowAttendanceStudents.length}</Text> Eligible in ALL 11 Subjects
+                    • <Text style={{ color: '#10B981', fontWeight: '700' }}>{students.length - (stats?.lowAttendanceStudents?.length || 0)}</Text> Eligible in ALL 11 Subjects
                   </Text>
                   <Text style={styles.overviewText}>
-                    • <Text style={{ color: '#EF4444', fontWeight: '700' }}>{stats.lowAttendanceStudents.length}</Text> Students Detained in 1 or more papers (&lt; 75%)
+                    • <Text style={{ color: '#EF4444', fontWeight: '700' }}>{stats?.lowAttendanceStudents?.length || 0}</Text> Students Detained in 1 or more papers (&lt; 75%)
                   </Text>
                 </View>
               </View>
@@ -295,7 +295,7 @@ export default function ReportsScreen({ students, subjects, records, stats, onSe
                 {/* Bars Scroll */}
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.barsRowScroll}>
                   {subjects.map((sub) => {
-                    const subStat = stats.subjectStats[sub.id] || { sessions: 0, present: 0, totalPossible: 0 };
+                    const subStat = (stats?.subjectStats && stats.subjectStats[sub.id]) || { sessions: 0, present: 0, totalPossible: 0 };
                     const pct = subStat.totalPossible > 0 ? Math.round((subStat.present / subStat.totalPossible) * 100) : 0;
                     const barColor = getPctColor(pct);
 
@@ -340,7 +340,7 @@ export default function ReportsScreen({ students, subjects, records, stats, onSe
 
               <View style={{ gap: 12, marginTop: 12 }}>
                 {subjects.map((sub) => {
-                  const subStat = stats.subjectStats[sub.id] || { sessions: 0, present: 0, totalPossible: 0 };
+                  const subStat = (stats?.subjectStats && stats.subjectStats[sub.id]) || { sessions: 0, present: 0, totalPossible: 0 };
                   const pct = subStat.totalPossible > 0 ? Math.round((subStat.present / subStat.totalPossible) * 100) : 0;
                   const barColor = getPctColor(pct);
 
@@ -372,7 +372,7 @@ export default function ReportsScreen({ students, subjects, records, stats, onSe
 
               <View style={{ gap: 8, marginTop: 12 }}>
                 {students.map((stu) => {
-                  const stuStat = stats.studentStats[stu.id] || { present: 0, total: 0 };
+                  const stuStat = (stats?.studentStats && stats.studentStats[stu.id]) || { present: 0, total: 0 };
                   const pct = stuStat.total > 0 ? Math.round((stuStat.present / stuStat.total) * 100) : 100;
                   const color = getPctColor(pct);
 
