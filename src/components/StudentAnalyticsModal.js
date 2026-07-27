@@ -50,8 +50,8 @@ export default function StudentAnalyticsModal({
     };
   });
 
-  const overallPct = totalHeldAll > 0 ? Math.round((totalAttendedAll / totalHeldAll) * 100) : 100;
-  const isEligible = overallPct >= 75;
+  const detainedSubjects = subjectBreakdown.filter((s) => s.percentage !== null && s.percentage < 75);
+  const isFullEligible = detainedSubjects.length === 0;
 
   const getPctColor = (pct) => {
     if (pct === null) return '#64748B';
@@ -98,26 +98,26 @@ export default function StudentAnalyticsModal({
                   ) : null}
                 </View>
 
-                {/* Big Percentage Badge */}
-                <View style={[styles.pctBadgeLarge, { backgroundColor: `${getPctColor(overallPct)}20`, borderColor: getPctColor(overallPct) }]}>
-                  <Text style={[styles.pctBadgeTextLarge, { color: getPctColor(overallPct) }]}>
-                    {overallPct}%
+                {/* Detained Papers Count Badge */}
+                <View style={[styles.pctBadgeLarge, { backgroundColor: isFullEligible ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)', borderColor: isFullEligible ? '#10B981' : '#EF4444' }]}>
+                  <Text style={[styles.pctBadgeTextLarge, { color: isFullEligible ? '#10B981' : '#EF4444' }]}>
+                    {detainedSubjects.length}
                   </Text>
-                  <Text style={styles.pctBadgeSub}>Overall</Text>
+                  <Text style={styles.pctBadgeSub}>Detained</Text>
                 </View>
               </View>
 
               {/* Status Banner */}
-              <View style={[styles.statusBanner, isEligible ? styles.statusEligible : styles.statusDetained]}>
+              <View style={[styles.statusBanner, isFullEligible ? styles.statusEligible : styles.statusDetained]}>
                 <Ionicons
-                  name={isEligible ? 'checkmark-shield' : 'alert-circle'}
+                  name={isFullEligible ? 'checkmark-shield' : 'alert-circle'}
                   size={18}
-                  color={isEligible ? '#10B981' : '#EF4444'}
+                  color={isFullEligible ? '#10B981' : '#EF4444'}
                 />
-                <Text style={[styles.statusText, { color: isEligible ? '#10B981' : '#EF4444' }]}>
-                  {isEligible
-                    ? 'ELIGIBLE FOR EXAM (>= 75% Attendance)'
-                    : 'ATTENDANCE SHORTAGE / DETAINED (< 75%)'}
+                <Text style={[styles.statusText, { color: isFullEligible ? '#10B981' : '#EF4444' }]}>
+                  {isFullEligible
+                    ? 'FULL EXAM ELIGIBILITY (>= 75% in all subjects)'
+                    : `DETAINED IN ${detainedSubjects.length} PAPER(S): ${detainedSubjects.map((s) => s.shortName).join(', ')}`}
                 </Text>
               </View>
 
@@ -264,10 +264,10 @@ export default function StudentAnalyticsModal({
                       </View>
 
                       <View style={styles.graphBarFooter}>
-                        <Text style={styles.graphDetailText}>
+                        <Text style={[styles.graphDetailText, { color: sub.percentage !== null && sub.percentage < 75 ? '#F87171' : '#94A3B8' }]}>
                           {sub.totalHeld === 0
                             ? 'No classes recorded yet'
-                            : `${sub.attended} attended of ${sub.totalHeld} held`}
+                            : `${sub.attended} attended of ${sub.totalHeld} held • ${sub.percentage >= 75 ? '🟢 Eligible' : '🔴 Detained Paper (<75%)'}`}
                         </Text>
                         <Text style={styles.graphFacultyText}>
                           Faculty: {sub.faculty || 'Department'}

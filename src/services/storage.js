@@ -347,19 +347,43 @@ export const calculateStats = (students, subjects, records) => {
 
   const overallPercentage = totalPossibleMarks > 0 ? Math.round((totalPresentMarks / totalPossibleMarks) * 100) : 0;
 
-  // Low attendance list (< 75%)
+  // Low attendance / Detained students: Students who have < 75% attendance in ANY subject
   const lowAttendanceStudents = students
     .map((stu) => {
-      const stats = studentStats[stu.id] || { present: 0, total: 0 };
-      const pct = stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 100;
+      const detainedSubjects = [];
+      let totalAttendedAll = 0;
+      let totalHeldAll = 0;
+
+      subjects.forEach((sub) => {
+        const subRecords = activeRecords.filter((r) => r.subjectId === sub.id);
+        const totalHeld = subRecords.length;
+        if (totalHeld > 0) {
+          const attended = subRecords.filter((r) => (r.presentStudentIds || []).includes(stu.id)).length;
+          const pct = Math.round((attended / totalHeld) * 100);
+          totalAttendedAll += attended;
+          totalHeldAll += totalHeld;
+          if (pct < 75) {
+            detainedSubjects.push({
+              subjectId: sub.id,
+              name: sub.name,
+              shortName: sub.shortName,
+              percentage: pct,
+              attended,
+              totalHeld,
+            });
+          }
+        }
+      });
+
       return {
         ...stu,
-        present: stats.present,
-        total: stats.total,
-        percentage: pct,
+        detainedSubjects,
+        detainedCount: detainedSubjects.length,
+        present: totalAttendedAll,
+        total: totalHeldAll,
       };
     })
-    .filter((stu) => stu.total > 0 && stu.percentage < 75);
+    .filter((stu) => stu.detainedCount > 0);
 
   // Top 5 Highest Attendance Students
   const topStudents = students

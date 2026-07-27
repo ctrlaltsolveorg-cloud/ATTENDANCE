@@ -203,13 +203,13 @@ export default function ReportsScreen({ students, subjects, records, stats, onSe
 
         {selectedTab === 'low' && (
           <View>
-            <Text style={styles.sectionHeader}>{"Shortage List (< 75% Attendance)"}</Text>
+            <Text style={styles.sectionHeader}>{"Subject-Wise Detained Papers Shortage List (< 75%)"}</Text>
             {stats.lowAttendanceStudents.length === 0 ? (
               <View style={styles.emptyCard}>
                 <Ionicons name="checkmark-circle" size={40} color="#10B981" />
                 <Text style={styles.emptyTitle}>All Clear!</Text>
                 <Text style={styles.emptySub}>
-                  No students are currently short on attendance. Everyone is above 75%.
+                  No students are currently detained in any subject paper. Everyone is above 75% in all subjects.
                 </Text>
               </View>
             ) : (
@@ -220,17 +220,23 @@ export default function ReportsScreen({ students, subjects, records, stats, onSe
                   onPress={() => onSelectStudent && onSelectStudent(stu)}
                   activeOpacity={0.7}
                 >
-                  <View style={styles.lowCardLeft}>
-                    <Text style={styles.lowRoll}>{stu.rollNo}</Text>
-                    <View>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                       <Text style={styles.lowName}>{stu.name}</Text>
-                      <Text style={styles.lowSub}>
-                        Attended {stu.present} of {stu.total} sessions • Tap for Graph 📊
-                      </Text>
+                      <Text style={styles.lowRoll}>{stu.rollNo}</Text>
                     </View>
-                  </View>
-                  <View style={styles.lowBadge}>
-                    <Text style={styles.lowBadgeText}>{stu.percentage}%</Text>
+                    <Text style={{ color: '#EF4444', fontSize: 12, fontWeight: '700', marginBottom: 4 }}>
+                      Detained in {stu.detainedCount} Paper(s):
+                    </Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                      {(stu.detainedSubjects || []).map((sub) => (
+                        <View key={sub.subjectId} style={styles.detainedPill}>
+                          <Text style={styles.detainedPillText}>
+                            {sub.shortName}: {sub.percentage}% ({sub.attended}/{sub.totalHeld})
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
                   </View>
                 </TouchableOpacity>
               ))
@@ -240,27 +246,27 @@ export default function ReportsScreen({ students, subjects, records, stats, onSe
 
         {selectedTab === 'analytics' && (
           <View style={styles.analyticsTabContainer}>
-            {/* Overall Class Overview Card */}
+            {/* Subject-Wise Exam Eligibility Summary */}
             <View style={styles.chartCard}>
               <View style={styles.chartCardHeader}>
-                <Ionicons name="pie-chart" size={20} color="#818CF8" />
-                <Text style={styles.chartCardTitle}>Class Attendance Overview</Text>
+                <Ionicons name="shield-checkmark" size={20} color="#818CF8" />
+                <Text style={styles.chartCardTitle}>BEU Subject-Wise Exam Eligibility Status</Text>
               </View>
               
               <View style={styles.overviewRingRow}>
                 <View style={styles.ringBadge}>
-                  <Text style={styles.ringNum}>{stats.overallPercentage}%</Text>
-                  <Text style={styles.ringSub}>Class Avg</Text>
+                  <Text style={styles.ringNum}>{students.length - stats.lowAttendanceStudents.length}</Text>
+                  <Text style={styles.ringSub}>All Pass</Text>
                 </View>
                 <View style={{ flex: 1, gap: 6 }}>
                   <Text style={styles.overviewText}>
                     • <Text style={{ color: '#F8FAFC', fontWeight: '700' }}>{students.length}</Text> Registered Mechatronics Students
                   </Text>
                   <Text style={styles.overviewText}>
-                    • <Text style={{ color: '#10B981', fontWeight: '700' }}>{students.length - stats.lowAttendanceStudents.length}</Text> Eligible (>= 75%)
+                    • <Text style={{ color: '#10B981', fontWeight: '700' }}>{students.length - stats.lowAttendanceStudents.length}</Text> Eligible in ALL 11 Subjects
                   </Text>
                   <Text style={styles.overviewText}>
-                    • <Text style={{ color: '#EF4444', fontWeight: '700' }}>{stats.lowAttendanceStudents.length}</Text> Attendance Shortage (&lt; 75%)
+                    • <Text style={{ color: '#EF4444', fontWeight: '700' }}>{stats.lowAttendanceStudents.length}</Text> Students Detained in 1 or more papers (&lt; 75%)
                   </Text>
                 </View>
               </View>
@@ -878,6 +884,19 @@ const styles = StyleSheet.create({
   rosterBadgeText: {
     fontSize: 13,
     fontWeight: '800',
+  },
+  detainedPill: {
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    borderColor: 'rgba(239, 68, 68, 0.4)',
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  detainedPillText: {
+    color: '#F87171',
+    fontSize: 11,
+    fontWeight: '700',
   },
   histogramContainer: {
     height: 200,
