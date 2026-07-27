@@ -77,7 +77,7 @@ export const initStorage = async () => {
     await initSupabaseConfig();
 
     const studentsData = await AsyncStorage.getItem(KEYS.STUDENTS);
-    if (!studentsData || !studentsData.includes('S11')) {
+    if (!studentsData || !studentsData.includes('"rollNo":"01"')) {
       await AsyncStorage.setItem(KEYS.STUDENTS, JSON.stringify(DEFAULT_STUDENTS));
     }
 
