@@ -322,9 +322,9 @@ export default function MarkAttendanceScreen({
             onPress={toggleHolidayMode}
             activeOpacity={0.7}
           >
-            <Ionicons name="sparkles" size={14} color={isHoliday ? '#FFFFFF' : '#8B5CF6'} />
+            <Ionicons name={isHoliday ? "close-circle" : "sparkles"} size={14} color={isHoliday ? '#FFFFFF' : '#8B5CF6'} />
             <Text style={[styles.holidayBtnText, isHoliday && styles.holidayBtnTextActive]}>
-              Holiday
+              {isHoliday ? 'Cancel Holiday' : 'Holiday'}
             </Text>
           </TouchableOpacity>
 
@@ -346,7 +346,13 @@ export default function MarkAttendanceScreen({
         <View style={styles.holidayBanner}>
           <Ionicons name="umbrella" size={28} color="#A78BFA" />
           <View style={{ flex: 1 }}>
-            <Text style={styles.holidayBannerTitle}>Official Holiday / Class Cancelled</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={styles.holidayBannerTitle}>Official Holiday / Class Cancelled</Text>
+              <TouchableOpacity style={styles.cancelHolidayPill} onPress={toggleHolidayMode} activeOpacity={0.7}>
+                <Ionicons name="close" size={12} color="#FFFFFF" />
+                <Text style={styles.cancelHolidayPillText}>Cancel Holiday</Text>
+              </TouchableOpacity>
+            </View>
             <Text style={styles.holidayBannerSub}>
               Students will NOT be marked absent. Attendance percentage is completely exempt for this date.
             </Text>
@@ -913,5 +919,19 @@ const styles = StyleSheet.create({
   },
   saveBtnHoliday: {
     backgroundColor: '#8B5CF6',
+  },
+  cancelHolidayPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  cancelHolidayPillText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
   },
 });
