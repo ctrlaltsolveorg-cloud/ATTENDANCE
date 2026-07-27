@@ -244,13 +244,12 @@ export default function DashboardScreen({
           <View style={styles.routineHeader}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Ionicons name="time" size={20} color={colors.primary} />
-              <Text style={[styles.routineTitle, { color: colors.textMain }]}>Today's Live Classes & Schedule</Text>
+              <Text style={[styles.routineTitle, { color: colors.textMain }]}>Today's Live Classes</Text>
             </View>
             <View style={[styles.dayBadge, { backgroundColor: isLight ? '#EEF2FF' : 'rgba(15, 23, 42, 0.8)' }]}>
               <Text style={[styles.dayBadgeText, { color: colors.primary }]}>{todayDayName}</Text>
             </View>
           </View>
-          <Text style={[styles.routineSub, { color: colors.textSub }]}>Purnea College of Engg. Mechatronics 3rd Sem Routine (Default Room 202/123):</Text>
 
           <View style={{ gap: 10, marginTop: 12 }}>
             {todayClasses.map((item, index) => {
