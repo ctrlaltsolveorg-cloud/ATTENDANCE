@@ -69,12 +69,23 @@ export default function ReportsScreen({ students, subjects, records, stats, onSe
           Mechatronics (M.T.E) • {records.length} Total Sessions Recorded
         </Text>
 
-        {/* Tab switcher */}
-        <View style={styles.tabContainer}>
+        {/* Separate Tab Chips with Icons */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.tabScrollContainer}
+          contentContainerStyle={styles.tabContainer}
+        >
           <TouchableOpacity
             style={[styles.tab, selectedTab === 'summary' && styles.tabActive]}
             onPress={() => setSelectedTab('summary')}
+            activeOpacity={0.7}
           >
+            <Ionicons
+              name="grid"
+              size={14}
+              color={selectedTab === 'summary' ? '#FFFFFF' : '#818CF8'}
+            />
             <Text style={[styles.tabText, selectedTab === 'summary' && styles.tabTextActive]}>
               Student Matrix
             </Text>
@@ -83,16 +94,28 @@ export default function ReportsScreen({ students, subjects, records, stats, onSe
           <TouchableOpacity
             style={[styles.tab, selectedTab === 'analytics' && styles.tabActive]}
             onPress={() => setSelectedTab('analytics')}
+            activeOpacity={0.7}
           >
+            <Ionicons
+              name="stats-chart"
+              size={14}
+              color={selectedTab === 'analytics' ? '#FFFFFF' : '#818CF8'}
+            />
             <Text style={[styles.tabText, selectedTab === 'analytics' && styles.tabTextActive]}>
-              📊 Visual Analytics
+              Visual Analytics
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.tab, selectedTab === 'low' && styles.tabActive]}
             onPress={() => setSelectedTab('low')}
+            activeOpacity={0.7}
           >
+            <Ionicons
+              name="alert-circle"
+              size={14}
+              color={selectedTab === 'low' ? '#FFFFFF' : '#EF4444'}
+            />
             <Text style={[styles.tabText, selectedTab === 'low' && styles.tabTextActive]}>
               Shortage ({stats.lowAttendanceStudents.length})
             </Text>
@@ -101,12 +124,18 @@ export default function ReportsScreen({ students, subjects, records, stats, onSe
           <TouchableOpacity
             style={[styles.tab, selectedTab === 'export' && styles.tabActive]}
             onPress={() => setSelectedTab('export')}
+            activeOpacity={0.7}
           >
+            <Ionicons
+              name="download"
+              size={14}
+              color={selectedTab === 'export' ? '#FFFFFF' : '#10B981'}
+            />
             <Text style={[styles.tabText, selectedTab === 'export' && styles.tabTextActive]}>
               Export PDF/CSV
             </Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       </View>
 
       <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>
@@ -461,29 +490,38 @@ const styles = StyleSheet.create({
     marginTop: 2,
     marginBottom: 12,
   },
+  tabScrollContainer: {
+    marginTop: 6,
+    marginBottom: 4,
+  },
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: '#0F172A',
-    padding: 4,
-    borderRadius: 10,
-    gap: 4,
+    gap: 8,
+    paddingVertical: 4,
   },
   tab: {
-    flex: 1,
-    paddingVertical: 8,
+    flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 8,
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 12,
+    backgroundColor: '#1E293B',
+    borderWidth: 1,
+    borderColor: '#334155',
   },
   tabActive: {
-    backgroundColor: '#6366F1',
+    backgroundColor: '#4F46E5',
+    borderColor: '#6366F1',
   },
   tabText: {
     color: '#94A3B8',
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
   },
   tabTextActive: {
     color: '#FFFFFF',
+    fontWeight: '800',
   },
   body: {
     flex: 1,
