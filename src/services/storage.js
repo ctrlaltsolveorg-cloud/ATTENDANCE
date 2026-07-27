@@ -139,10 +139,16 @@ export const getStudents = async () => {
 
   try {
     const data = await AsyncStorage.getItem(KEYS.STUDENTS);
-    return data ? JSON.parse(data) : DEFAULT_STUDENTS;
-  } catch (e) {
-    return DEFAULT_STUDENTS;
-  }
+    if (data) {
+      const parsed = JSON.parse(data);
+      if (parsed && parsed.length > 0 && parsed[0].rollNo === '01') {
+        return parsed;
+      }
+    }
+  } catch (e) {}
+
+  await AsyncStorage.setItem(KEYS.STUDENTS, JSON.stringify(DEFAULT_STUDENTS));
+  return DEFAULT_STUDENTS;
 };
 
 export const saveStudents = async (students) => {
