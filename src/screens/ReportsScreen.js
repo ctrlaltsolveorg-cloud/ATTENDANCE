@@ -12,7 +12,21 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { generateCSVReport, generatePrintableHTMLRegister } from '../services/storage';
 
-export default function ReportsScreen({ students, subjects, records, stats, onSelectStudent }) {
+import { getTheme } from '../theme/theme';
+
+export default function ReportsScreen({
+  students,
+  subjects,
+  records,
+  stats,
+  onSelectStudent,
+  themeMode = 'light',
+  onToggleTheme,
+}) {
+  const currentTheme = getTheme(themeMode);
+  const colors = currentTheme.colors;
+  const isLight = themeMode === 'light';
+
   const [selectedTab, setSelectedTab] = useState('summary'); // 'summary' | 'low' | 'export'
   const [selectedExportSubject, setSelectedExportSubject] = useState('ALL');
 
@@ -61,11 +75,32 @@ export default function ReportsScreen({ students, subjects, records, stats, onSe
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.bgDark }]}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Attendance Reports</Text>
-        <Text style={styles.headerSub}>
+      <View style={[styles.header, { backgroundColor: colors.headerBg, borderBottomColor: colors.headerBorder }]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <Text style={[styles.headerTitle, { color: colors.textMain }]}>Attendance Reports</Text>
+          {onToggleTheme && (
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 4,
+                paddingHorizontal: 8,
+                paddingVertical: 5,
+                borderRadius: 10,
+                backgroundColor: isLight ? '#EEF2FF' : 'rgba(168, 85, 247, 0.2)',
+                borderColor: isLight ? '#C7D2FE' : 'rgba(168, 85, 247, 0.4)',
+                borderWidth: 1,
+              }}
+              onPress={onToggleTheme}
+              activeOpacity={0.7}
+            >
+              <Ionicons name={isLight ? 'sunny' : 'moon'} size={14} color={isLight ? '#4F46E5' : '#C084FC'} />
+            </TouchableOpacity>
+          )}
+        </View>
+        <Text style={[styles.headerSub, { color: colors.textSub }]}>
           Mechatronics (M.T.E) • {records.length} Total Sessions Recorded
         </Text>
 
@@ -150,17 +185,17 @@ export default function ReportsScreen({ students, subjects, records, stats, onSe
 
             {students.map((stu) => {
               return (
-                <View key={stu.id} style={styles.studentReportRow}>
+                <View key={stu.id} style={[styles.studentReportRow, { backgroundColor: colors.bgCard, borderColor: colors.glassBorder, boxShadow: colors.cardShadow }]}>
                   <TouchableOpacity
                     style={styles.stuRowHeader}
                     onPress={() => onSelectStudent && onSelectStudent(stu)}
                     activeOpacity={0.7}
                   >
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.stuName}>{stu.name}</Text>
-                      <Text style={styles.stuRoll}>{stu.rollNo} • Tap for Bar Chart 📊</Text>
+                      <Text style={[styles.stuName, { color: colors.textMain }]}>{stu.name}</Text>
+                      <Text style={[styles.stuRoll, { color: colors.primary }]}>{stu.rollNo} • Tap for Bar Chart 📊</Text>
                     </View>
-                    <Ionicons name="bar-chart" size={16} color="#818CF8" />
+                    <Ionicons name="bar-chart" size={16} color={colors.primary} />
                   </TouchableOpacity>
 
                   {/* Horizontal Scrollable Subject Percentage List */}

@@ -10,14 +10,21 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+import { getTheme } from '../theme/theme';
+
 export default function StudentAnalyticsModal({
   visible,
   student,
   subjects = [],
   records = [],
   onClose,
+  themeMode = 'light',
 }) {
   if (!student) return null;
+
+  const currentTheme = getTheme(themeMode);
+  const colors = currentTheme.colors;
+  const isLight = themeMode === 'light';
 
   // Calculate subject-wise attendance for this student
   let totalAttendedAll = 0;
@@ -68,33 +75,33 @@ export default function StudentAnalyticsModal({
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>
-        <View style={styles.modalCard}>
+        <View style={[styles.modalCard, { backgroundColor: colors.bgGlassElevated, borderColor: colors.glassBorder }]}>
           {/* Top Bar */}
-          <View style={styles.modalHeader}>
+          <View style={[styles.modalHeader, { backgroundColor: colors.headerBg, borderBottomColor: colors.headerBorder }]}>
             <View style={styles.headerTitleGroup}>
-              <Ionicons name="bar-chart" size={20} color="#818CF8" />
-              <Text style={styles.modalHeaderTitle}>Student Graphical Analytics</Text>
+              <Ionicons name="bar-chart" size={20} color={colors.primary} />
+              <Text style={[styles.modalHeaderTitle, { color: colors.textMain }]}>Student Graphical Analytics</Text>
             </View>
             <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7}>
-              <Ionicons name="close" size={22} color="#94A3B8" />
+              <Ionicons name="close" size={22} color={colors.textSub} />
             </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.modalBody} contentContainerStyle={styles.modalBodyContent}>
             {/* Student Profile Card */}
-            <View style={styles.profileCard}>
+            <View style={[styles.profileCard, { backgroundColor: colors.bgCard, borderColor: colors.glassBorder }]}>
               <View style={styles.avatarRow}>
-                <View style={[styles.avatarCircle, { borderColor: isFullEligible ? '#10B981' : '#EF4444' }]}>
-                  <Text style={styles.avatarText}>
+                <View style={[styles.avatarCircle, { backgroundColor: isLight ? '#EEF2FF' : 'rgba(15, 23, 42, 0.8)', borderColor: isFullEligible ? '#10B981' : '#EF4444' }]}>
+                  <Text style={[styles.avatarText, { color: colors.primary }]}>
                     {student.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
                   </Text>
                 </View>
 
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.studentName}>{student.name}</Text>
-                  <Text style={styles.studentRoll}>BEU Roll No: {student.rollNo}</Text>
+                  <Text style={[styles.studentName, { color: colors.textMain }]}>{student.name}</Text>
+                  <Text style={[styles.studentRoll, { color: colors.primary }]}>BEU Roll No: {student.rollNo}</Text>
                   {student.regNo ? (
-                    <Text style={styles.studentReg}>Reg No: {student.regNo}</Text>
+                    <Text style={[styles.studentReg, { color: colors.textSub }]}>Reg No: {student.regNo}</Text>
                   ) : null}
                 </View>
 

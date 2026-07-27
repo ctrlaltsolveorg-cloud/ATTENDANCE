@@ -9,7 +9,7 @@ import {
   Modal,
   Alert,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { getTheme } from '../theme/theme';
 
 export default function StudentListScreen({
   students,
@@ -18,7 +18,12 @@ export default function StudentListScreen({
   onUpdateStudent,
   onDeleteStudent,
   onSelectStudent,
+  themeMode = 'light',
+  onToggleTheme,
 }) {
+  const currentTheme = getTheme(themeMode);
+  const colors = currentTheme.colors;
+  const isLight = themeMode === 'light';
   const [searchQuery, setSearchQuery] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [editStudent, setEditStudent] = useState(null);
@@ -127,32 +132,54 @@ export default function StudentListScreen({
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.bgDark }]}>
       {/* Top Title Bar */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.headerBg, borderBottomColor: colors.headerBorder }]}>
         <View style={styles.headerTop}>
           <View>
-            <Text style={styles.headerTitle}>Students Roster</Text>
-            <Text style={styles.headerSub}>Mechatronics Engineering ({students.length} Total)</Text>
+            <Text style={[styles.headerTitle, { color: colors.textMain }]}>Students Roster</Text>
+            <Text style={[styles.headerSub, { color: colors.textSub }]}>Mechatronics Engineering ({students.length} Total)</Text>
           </View>
 
-          <TouchableOpacity
-            style={styles.addBtn}
-            onPress={() => triggerProtectedAction({ type: 'add' })}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="lock-closed" size={14} color="#FFFFFF" />
-            <Text style={styles.addBtnText}>Add Student</Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            {onToggleTheme && (
+              <TouchableOpacity
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 4,
+                  paddingHorizontal: 8,
+                  paddingVertical: 5,
+                  borderRadius: 10,
+                  backgroundColor: isLight ? '#EEF2FF' : 'rgba(168, 85, 247, 0.2)',
+                  borderColor: isLight ? '#C7D2FE' : 'rgba(168, 85, 247, 0.4)',
+                  borderWidth: 1,
+                }}
+                onPress={onToggleTheme}
+                activeOpacity={0.7}
+              >
+                <Ionicons name={isLight ? 'sunny' : 'moon'} size={14} color={isLight ? '#4F46E5' : '#C084FC'} />
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              style={[styles.addBtn, { backgroundColor: colors.primary, borderColor: colors.glassBorderActive }]}
+              onPress={() => triggerProtectedAction({ type: 'add' })}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="lock-closed" size={14} color="#FFFFFF" />
+              <Text style={styles.addBtnText}>Add Student</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Search */}
-        <View style={styles.searchBox}>
-          <Ionicons name="search" size={16} color="#64748B" />
+        <View style={[styles.searchBox, { backgroundColor: colors.bgGlass, borderColor: colors.glassBorder }]}>
+          <Ionicons name="search" size={16} color={colors.textMuted} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.textMain }]}
             placeholder="Search by Roll No or Name..."
-            placeholderTextColor="#64748B"
+            placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
@@ -170,17 +197,17 @@ export default function StudentListScreen({
           const statusColor = getPctColor(pct);
 
           return (
-            <View style={styles.card}>
+            <View style={[styles.card, { backgroundColor: colors.bgCard, borderColor: colors.glassBorder, boxShadow: colors.cardShadow }]}>
               <TouchableOpacity
                 style={styles.cardLeft}
                 onPress={() => onSelectStudent && onSelectStudent(item)}
                 activeOpacity={0.7}
               >
-                <View style={styles.rollBadge}>
-                  <Text style={styles.rollText}>{item.rollNo}</Text>
+                <View style={[styles.rollBadge, { backgroundColor: isLight ? '#EEF2FF' : 'rgba(15, 23, 42, 0.8)' }]}>
+                  <Text style={[styles.rollText, { color: colors.primary }]}>{item.rollNo}</Text>
                 </View>
                 <View style={styles.infoCol}>
-                  <Text style={styles.studentName}>{item.name}</Text>
+                  <Text style={[styles.studentName, { color: colors.textMain }]}>{item.name}</Text>
                 </View>
               </TouchableOpacity>
 

@@ -9,8 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Header from '../components/Header';
-import StatCard from '../components/StatCard';
+import { getTheme } from '../theme/theme';
 
 export default function DashboardScreen({
   branchInfo,
@@ -22,7 +21,13 @@ export default function DashboardScreen({
   onResetData,
   onOpenCloudConfig,
   onSelectStudent,
+  themeMode = 'light',
+  onToggleTheme,
 }) {
+  const currentTheme = getTheme(themeMode);
+  const colors = currentTheme.colors;
+  const isLight = themeMode === 'light';
+
   const getPctColor = (pct) => {
     if (pct >= 75) return '#10B981'; // Emerald Green
     if (pct >= 60) return '#F59E0B'; // Amber Yellow
@@ -30,8 +35,13 @@ export default function DashboardScreen({
   };
 
   return (
-    <View style={styles.container}>
-      <Header branchInfo={branchInfo} onReset={onResetData} />
+    <View style={[styles.container, { backgroundColor: colors.bgDark }]}>
+      <Header
+        branchInfo={branchInfo}
+        onReset={onResetData}
+        themeMode={themeMode}
+        onToggleTheme={onToggleTheme}
+      />
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
 
@@ -91,17 +101,17 @@ export default function DashboardScreen({
 
         {/* Top 5 Students Leaderboard Section */}
         {stats?.topStudents && stats.topStudents.length > 0 && (
-          <View style={styles.topCard}>
+          <View style={[styles.topCard, { backgroundColor: colors.bgCard, borderColor: colors.glassBorder, boxShadow: colors.cardShadow }]}>
             <View style={styles.topHeader}>
               <Ionicons name="trophy" size={20} color="#F59E0B" />
-              <Text style={styles.topTitle}>Top 5 Students (Highest Attendance)</Text>
+              <Text style={[styles.topTitle, { color: colors.textMain }]}>Top 5 Students (Highest Attendance)</Text>
             </View>
-            <Text style={styles.topSub}>Tap any student to open detailed graphical attendance charts:</Text>
+            <Text style={[styles.topSub, { color: colors.textSub }]}>Tap any student to open detailed graphical attendance charts:</Text>
             <View style={styles.topList}>
               {stats.topStudents.map((stu, index) => (
                 <TouchableOpacity
                   key={stu.id}
-                  style={styles.topItem}
+                  style={[styles.topItem, { backgroundColor: colors.bgGlass, borderColor: colors.glassBorder }]}
                   onPress={() => onSelectStudent && onSelectStudent(stu)}
                   activeOpacity={0.7}
                 >
@@ -109,8 +119,8 @@ export default function DashboardScreen({
                     <Text style={styles.rankText}>#{index + 1}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.topName}>{stu.name}</Text>
-                    <Text style={styles.topRoll}>{stu.rollNo} • Tap for Graph 📊</Text>
+                    <Text style={[styles.topName, { color: colors.textMain }]}>{stu.name}</Text>
+                    <Text style={[styles.topRoll, { color: colors.primary }]}>{stu.rollNo} • Tap for Graph 📊</Text>
                   </View>
                   <View style={styles.topBadge}>
                     <Text style={styles.topBadgeText}>{stu.percentage}%</Text>
@@ -123,8 +133,8 @@ export default function DashboardScreen({
 
         {/* Subject-Wise Performance List */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Subject Attendance Breakdown</Text>
-          <Text style={styles.sectionSub}>11 Subjects from PCE Schedule</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Subject Attendance Breakdown</Text>
+          <Text style={[styles.sectionSub, { color: colors.textSub }]}>11 Subjects from PCE Schedule</Text>
         </View>
 
         {subjects.map((sub) => {
@@ -133,27 +143,27 @@ export default function DashboardScreen({
           const barColor = getPctColor(pct);
 
           return (
-            <View key={sub.id} style={styles.subjectCard}>
+            <View key={sub.id} style={[styles.subjectCard, { backgroundColor: colors.bgCard, borderColor: colors.glassBorder, boxShadow: colors.cardShadow }]}>
               <View style={styles.subTopRow}>
                 <View style={styles.subLeft}>
                   <View style={[styles.subIconBg, { backgroundColor: sub.type === 'Lab' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(99, 102, 241, 0.15)' }]}>
-                    <Ionicons name={sub.icon || 'book-outline'} size={18} color={sub.type === 'Lab' ? '#F59E0B' : '#818CF8'} />
+                    <Ionicons name={sub.icon || 'book-outline'} size={18} color={sub.type === 'Lab' ? '#F59E0B' : colors.primary} />
                   </View>
                   <View>
-                    <Text style={styles.subName}>{sub.name}</Text>
-                    <Text style={styles.subFaculty}>{sub.code} • {sub.faculty}</Text>
+                    <Text style={[styles.subName, { color: colors.textMain }]}>{sub.name}</Text>
+                    <Text style={[styles.subFaculty, { color: colors.textSub }]}>{sub.code} • {sub.faculty}</Text>
                   </View>
                 </View>
                 <View style={styles.subRight}>
                   <Text style={[styles.subPct, { color: barColor }]}>
                     {subStat.sessions === 0 ? 'No Data' : `${pct}%`}
                   </Text>
-                  <Text style={styles.subSessions}>{subStat.sessions} Classes</Text>
+                  <Text style={[styles.subSessions, { color: colors.textMuted }]}>{subStat.sessions} Classes</Text>
                 </View>
               </View>
 
               {/* Attendance Progress Bar */}
-              <View style={styles.progressBg}>
+              <View style={[styles.progressBg, { backgroundColor: isLight ? '#E2E8F0' : 'rgba(15, 23, 42, 0.8)' }]}>
                 <View
                   style={[
                     styles.progressFill,

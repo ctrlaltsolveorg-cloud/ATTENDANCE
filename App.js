@@ -54,6 +54,11 @@ export default function App() {
   const [initialHoliday, setInitialHoliday] = useState(false);
   const [cloudModalVisible, setCloudModalVisible] = useState(false);
   const [analyticsStudent, setAnalyticsStudent] = useState(null);
+  const [themeMode, setThemeMode] = useState('light'); // 'light' | 'dark'
+
+  const toggleTheme = () => {
+    setThemeMode((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
 
   const [branchInfo, setBranchInfo] = useState(null);
   const [students, setStudents] = useState([]);
@@ -184,6 +189,8 @@ export default function App() {
             onResetData={handleResetData}
             onOpenCloudConfig={() => setCloudModalVisible(true)}
             onSelectStudent={setAnalyticsStudent}
+            themeMode={themeMode}
+            onToggleTheme={toggleTheme}
           />
         )}
 
@@ -195,6 +202,8 @@ export default function App() {
             initialHoliday={initialHoliday}
             onSaveSession={handleSaveSession}
             onCancel={() => handleNavigate('dashboard')}
+            themeMode={themeMode}
+            onToggleTheme={toggleTheme}
           />
         )}
 
@@ -206,6 +215,8 @@ export default function App() {
             onUpdateStudent={handleUpdateStudent}
             onDeleteStudent={handleDeleteStudent}
             onSelectStudent={setAnalyticsStudent}
+            themeMode={themeMode}
+            onToggleTheme={toggleTheme}
           />
         )}
 
@@ -216,6 +227,8 @@ export default function App() {
             records={records}
             stats={stats}
             onSelectStudent={setAnalyticsStudent}
+            themeMode={themeMode}
+            onToggleTheme={toggleTheme}
           />
         )}
       </View>
@@ -234,11 +247,21 @@ export default function App() {
         subjects={subjects}
         records={records}
         onClose={() => setAnalyticsStudent(null)}
+        themeMode={themeMode}
       />
 
-      {/* Floating Glassmorphic Navigation Tab Bar */}
-      <View style={styles.tabBarWrapper}>
-        <View style={styles.tabBar}>
+      {/* Floating Navigation Tab Bar */}
+      <View style={[styles.tabBarWrapper, { backgroundColor: themeMode === 'light' ? '#F8FAFC' : '#120B2E' }]}>
+        <View
+          style={[
+            styles.tabBar,
+            {
+              backgroundColor: themeMode === 'light' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(20, 12, 45, 0.9)',
+              borderColor: themeMode === 'light' ? '#E2E8F0' : 'rgba(255, 255, 255, 0.15)',
+              boxShadow: themeMode === 'light' ? '0 8px 30px rgba(15, 23, 42, 0.12)' : '0 16px 40px rgba(0, 0, 0, 0.7)',
+            },
+          ]}
+        >
           <TouchableOpacity
             style={styles.tabItem}
             onPress={() => setActiveTab('dashboard')}
@@ -247,9 +270,9 @@ export default function App() {
             <Ionicons
               name={activeTab === 'dashboard' ? 'grid' : 'grid-outline'}
               size={22}
-              color={activeTab === 'dashboard' ? '#70D6FF' : '#64748B'}
+              color={activeTab === 'dashboard' ? (themeMode === 'light' ? '#4F46E5' : '#C084FC') : '#64748B'}
             />
-            <Text style={[styles.tabLabel, activeTab === 'dashboard' && styles.tabLabelActive]}>
+            <Text style={[styles.tabLabel, activeTab === 'dashboard' && { color: themeMode === 'light' ? '#4F46E5' : '#C084FC', fontWeight: '800' }]}>
               Dashboard
             </Text>
           </TouchableOpacity>
@@ -262,12 +285,13 @@ export default function App() {
             <View
               style={[
                 styles.markIconCircle,
-                activeTab === 'mark' && styles.markIconCircleActive,
+                { backgroundColor: themeMode === 'light' ? '#4F46E5' : '#A855F7' },
+                activeTab === 'mark' && { transform: [{ scale: 1.08 }] },
               ]}
             >
               <Ionicons name="checkbox-outline" size={22} color="#FFFFFF" />
             </View>
-            <Text style={[styles.tabLabel, activeTab === 'mark' && styles.tabLabelActive]}>
+            <Text style={[styles.tabLabel, activeTab === 'mark' && { color: themeMode === 'light' ? '#4F46E5' : '#C084FC', fontWeight: '800' }]}>
               Mark Roll
             </Text>
           </TouchableOpacity>
@@ -280,9 +304,9 @@ export default function App() {
             <Ionicons
               name={activeTab === 'students' ? 'people' : 'people-outline'}
               size={22}
-              color={activeTab === 'students' ? '#70D6FF' : '#64748B'}
+              color={activeTab === 'students' ? (themeMode === 'light' ? '#4F46E5' : '#C084FC') : '#64748B'}
             />
-            <Text style={[styles.tabLabel, activeTab === 'students' && styles.tabLabelActive]}>
+            <Text style={[styles.tabLabel, activeTab === 'students' && { color: themeMode === 'light' ? '#4F46E5' : '#C084FC', fontWeight: '800' }]}>
               Students
             </Text>
           </TouchableOpacity>
@@ -295,9 +319,9 @@ export default function App() {
             <Ionicons
               name={activeTab === 'reports' ? 'document-text' : 'document-text-outline'}
               size={22}
-              color={activeTab === 'reports' ? '#70D6FF' : '#64748B'}
+              color={activeTab === 'reports' ? (themeMode === 'light' ? '#4F46E5' : '#C084FC') : '#64748B'}
             />
-            <Text style={[styles.tabLabel, activeTab === 'reports' && styles.tabLabelActive]}>
+            <Text style={[styles.tabLabel, activeTab === 'reports' && { color: themeMode === 'light' ? '#4F46E5' : '#C084FC', fontWeight: '800' }]}>
               Reports
             </Text>
           </TouchableOpacity>
