@@ -173,8 +173,66 @@ export default function StudentAnalyticsModal({
                 <Ionicons name="bar-chart-outline" size={18} color="#818CF8" />
                 <Text style={styles.sectionTitleText}>Subject-Wise Attendance Graphical Analysis</Text>
               </View>
-              <Text style={styles.sectionSubText}>11 Mechatronics BEU Syllabus Subjects & Labs</Text>
+              <Text style={styles.sectionSubText}>All 11 Mechatronics BEU Syllabus Subjects & Labs</Text>
 
+              {/* Combined 11-Subject Histogram Chart Diagram */}
+              <View style={styles.histogramCard}>
+                <View style={styles.histogramHeader}>
+                  <Ionicons name="analytics" size={18} color="#818CF8" />
+                  <Text style={styles.histogramTitle}>Combined 11-Subject Attendance Histogram Diagram</Text>
+                </View>
+                <Text style={styles.histogramSub}>Unified side-by-side comparative histogram chart for all subjects:</Text>
+
+                <View style={styles.histogramContainer}>
+                  {/* Guideline Overlay */}
+                  <View style={styles.yAxisLine100}>
+                    <Text style={styles.yAxisLabel}>100%</Text>
+                  </View>
+                  <View style={styles.yAxisLine75}>
+                    <Text style={styles.yAxisLabel75}>75% Target Line</Text>
+                  </View>
+                  <View style={styles.yAxisLine50}>
+                    <Text style={styles.yAxisLabel}>50%</Text>
+                  </View>
+
+                  {/* Unified Bar Histogram */}
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.barsRowScroll}>
+                    {subjectBreakdown.map((sub) => {
+                      const pct = sub.percentage !== null ? sub.percentage : 0;
+                      const barColor = getPctColor(sub.percentage);
+
+                      return (
+                        <View key={sub.id} style={styles.histogramCol}>
+                          <Text style={[styles.barTopPct, { color: barColor }]}>
+                            {sub.percentage !== null ? `${sub.percentage}%` : 'N/A'}
+                          </Text>
+
+                          <View style={styles.verticalPlotArea}>
+                            <View
+                              style={[
+                                styles.verticalBarFill,
+                                {
+                                  height: `${Math.max(pct, 5)}%`,
+                                  backgroundColor: barColor,
+                                },
+                              ]}
+                            />
+                          </View>
+
+                          <Text style={styles.xBarCode} numberOfLines={1}>
+                            {sub.shortName}
+                          </Text>
+                          <Text style={styles.xBarDetail}>
+                            {sub.attended}/{sub.totalHeld}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+              </View>
+
+              {/* Detailed Breakdown List */}
               <View style={styles.graphContainer}>
                 {subjectBreakdown.map((sub) => {
                   const barColor = getPctColor(sub.percentage);
@@ -484,5 +542,124 @@ const styles = StyleSheet.create({
   graphFacultyText: {
     color: '#64748B',
     fontSize: 11,
+  },
+  histogramCard: {
+    backgroundColor: '#0F172A',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#334155',
+    marginBottom: 16,
+  },
+  histogramHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  histogramTitle: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  histogramSub: {
+    color: '#94A3B8',
+    fontSize: 11,
+    marginTop: 2,
+    marginBottom: 12,
+  },
+  histogramContainer: {
+    height: 200,
+    position: 'relative',
+    justifyContent: 'flex-end',
+    paddingTop: 24,
+    paddingBottom: 36,
+    backgroundColor: 'rgba(30, 41, 59, 0.4)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  yAxisLine100: {
+    position: 'absolute',
+    top: 24,
+    left: 8,
+    right: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  yAxisLine75: {
+    position: 'absolute',
+    top: 60,
+    left: 8,
+    right: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(16, 185, 129, 0.4)',
+    borderStyle: 'dashed',
+  },
+  yAxisLine50: {
+    position: 'absolute',
+    top: 96,
+    left: 8,
+    right: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  yAxisLabel: {
+    color: '#64748B',
+    fontSize: 9,
+    fontWeight: '600',
+    position: 'absolute',
+    top: -12,
+    right: 4,
+  },
+  yAxisLabel75: {
+    color: '#10B981',
+    fontSize: 9,
+    fontWeight: '700',
+    position: 'absolute',
+    top: -12,
+    right: 4,
+  },
+  barsRowScroll: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 10,
+    paddingHorizontal: 8,
+    height: '100%',
+  },
+  histogramCol: {
+    alignItems: 'center',
+    width: 42,
+    height: '100%',
+    justifyContent: 'flex-end',
+  },
+  barTopPct: {
+    fontSize: 10,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  verticalPlotArea: {
+    width: 22,
+    flex: 1,
+    backgroundColor: '#1E293B',
+    borderRadius: 6,
+    justifyContent: 'flex-end',
+    overflow: 'hidden',
+  },
+  verticalBarFill: {
+    width: '100%',
+    borderRadius: 6,
+  },
+  xBarCode: {
+    color: '#F8FAFC',
+    fontSize: 10,
+    fontWeight: '700',
+    marginTop: 6,
+    textAlign: 'center',
+  },
+  xBarDetail: {
+    color: '#64748B',
+    fontSize: 9,
+    marginTop: 1,
+    textAlign: 'center',
   },
 });

@@ -240,6 +240,64 @@ export default function ReportsScreen({ students, subjects, records, stats, onSe
             {/* Subject-Wise Class Average Graphical Bar Chart */}
             <View style={styles.chartCard}>
               <View style={styles.chartCardHeader}>
+                <Ionicons name="analytics" size={20} color="#818CF8" />
+                <Text style={styles.chartCardTitle}>Class-Wide 11-Subject Combined Histogram Diagram</Text>
+              </View>
+              <Text style={styles.chartSub}>Combined comparative histogram chart for all 11 Mechatronics subjects & labs:</Text>
+
+              <View style={styles.histogramContainer}>
+                {/* Guidelines */}
+                <View style={styles.yAxisLine100}>
+                  <Text style={styles.yAxisLabel}>100%</Text>
+                </View>
+                <View style={styles.yAxisLine75}>
+                  <Text style={styles.yAxisLabel75}>75% Target Line</Text>
+                </View>
+                <View style={styles.yAxisLine50}>
+                  <Text style={styles.yAxisLabel}>50%</Text>
+                </View>
+
+                {/* Bars Scroll */}
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.barsRowScroll}>
+                  {subjects.map((sub) => {
+                    const subStat = stats.subjectStats[sub.id] || { sessions: 0, present: 0, totalPossible: 0 };
+                    const pct = subStat.totalPossible > 0 ? Math.round((subStat.present / subStat.totalPossible) * 100) : 0;
+                    const barColor = getPctColor(pct);
+
+                    return (
+                      <View key={sub.id} style={styles.histogramCol}>
+                        <Text style={[styles.barTopPct, { color: barColor }]}>
+                          {subStat.sessions > 0 ? `${pct}%` : 'N/A'}
+                        </Text>
+
+                        <View style={styles.verticalPlotArea}>
+                          <View
+                            style={[
+                              styles.verticalBarFill,
+                              {
+                                height: `${Math.max(pct, 5)}%`,
+                                backgroundColor: barColor,
+                              },
+                            ]}
+                          />
+                        </View>
+
+                        <Text style={styles.xBarCode} numberOfLines={1}>
+                          {sub.shortName}
+                        </Text>
+                        <Text style={styles.xBarDetail}>
+                          {subStat.sessions} sess
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            </View>
+
+            {/* Subject Breakdown List */}
+            <View style={styles.chartCard}>
+              <View style={styles.chartCardHeader}>
                 <Ionicons name="stats-chart" size={20} color="#6366F1" />
                 <Text style={styles.chartCardTitle}>Subject-Wise Class Performance</Text>
               </View>
@@ -782,5 +840,101 @@ const styles = StyleSheet.create({
   rosterBadgeText: {
     fontSize: 13,
     fontWeight: '800',
+  },
+  histogramContainer: {
+    height: 200,
+    position: 'relative',
+    justifyContent: 'flex-end',
+    paddingTop: 24,
+    paddingBottom: 36,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#334155',
+    marginTop: 10,
+  },
+  yAxisLine100: {
+    position: 'absolute',
+    top: 24,
+    left: 8,
+    right: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  yAxisLine75: {
+    position: 'absolute',
+    top: 60,
+    left: 8,
+    right: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(16, 185, 129, 0.4)',
+    borderStyle: 'dashed',
+  },
+  yAxisLine50: {
+    position: 'absolute',
+    top: 96,
+    left: 8,
+    right: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  yAxisLabel: {
+    color: '#64748B',
+    fontSize: 9,
+    fontWeight: '600',
+    position: 'absolute',
+    top: -12,
+    right: 4,
+  },
+  yAxisLabel75: {
+    color: '#10B981',
+    fontSize: 9,
+    fontWeight: '700',
+    position: 'absolute',
+    top: -12,
+    right: 4,
+  },
+  barsRowScroll: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 10,
+    paddingHorizontal: 8,
+    height: '100%',
+  },
+  histogramCol: {
+    alignItems: 'center',
+    width: 44,
+    height: '100%',
+    justifyContent: 'flex-end',
+  },
+  barTopPct: {
+    fontSize: 10,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  verticalPlotArea: {
+    width: 22,
+    flex: 1,
+    backgroundColor: '#0F172A',
+    borderRadius: 6,
+    justifyContent: 'flex-end',
+    overflow: 'hidden',
+  },
+  verticalBarFill: {
+    width: '100%',
+    borderRadius: 6,
+  },
+  xBarCode: {
+    color: '#F8FAFC',
+    fontSize: 10,
+    fontWeight: '700',
+    marginTop: 6,
+    textAlign: 'center',
+  },
+  xBarDetail: {
+    color: '#64748B',
+    fontSize: 9,
+    marginTop: 1,
+    textAlign: 'center',
   },
 });
