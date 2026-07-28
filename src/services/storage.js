@@ -117,10 +117,17 @@ export const getStudents = async () => {
       .select('*')
       .order('roll_int', { ascending: true });
 
-    if (!error && remoteStudents && remoteStudents.length > 0) {
+    if (
+      !error &&
+      remoteStudents &&
+      remoteStudents.length === 19 &&
+      remoteStudents[0]?.reg_no === '25161131001' &&
+      remoteStudents[1]?.reg_no === '25161131002'
+    ) {
       const mapped = remoteStudents.map((s) => ({
         id: s.id,
         rollNo: s.roll_no,
+        univRoll: s.univ_roll || s.univRoll,
         regNo: s.reg_no,
         rollInt: s.roll_int,
         name: s.name,

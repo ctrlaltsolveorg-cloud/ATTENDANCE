@@ -163,12 +163,21 @@ export default function StudentListScreen({
             )}
 
             <TouchableOpacity
-              style={[styles.addBtn, { backgroundColor: colors.primary, borderColor: colors.glassBorderActive }]}
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 17,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: colors.primary,
+                borderColor: colors.glassBorderActive,
+                borderWidth: 1,
+              }}
               onPress={() => triggerProtectedAction({ type: 'add' })}
               activeOpacity={0.8}
+              title="Add Student"
             >
-              <Ionicons name="lock-closed" size={14} color="#FFFFFF" />
-              <Text style={styles.addBtnText}>Add Student</Text>
+              <Ionicons name="person-add" size={16} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
         </View>
