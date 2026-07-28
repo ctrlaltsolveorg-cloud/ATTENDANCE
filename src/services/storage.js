@@ -4,7 +4,7 @@ import { getSupabaseClient, initSupabaseConfig } from './supabase';
 
 const KEYS = {
   BRANCH: '@pce_attendance_branch',
-  STUDENTS: '@pce_attendance_students',
+  STUDENTS: '@pce_attendance_students_v5',
   SUBJECTS: '@pce_attendance_subjects',
   ATTENDANCE: '@pce_attendance_records',
   NOTICE: '@pce_attendance_notice',
@@ -141,7 +141,12 @@ export const getStudents = async () => {
     const data = await AsyncStorage.getItem(KEYS.STUDENTS);
     if (data) {
       const parsed = JSON.parse(data);
-      if (parsed && parsed.length > 0 && parsed[0].rollNo === '01') {
+      if (
+        parsed &&
+        parsed.length === 19 &&
+        parsed[0]?.regNo === '25161131001' &&
+        parsed[1]?.regNo === '25161131002'
+      ) {
         return parsed;
       }
     }

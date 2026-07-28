@@ -44,16 +44,4 @@ export const DEFAULT_STUDENTS = [
   { id: 'mte_stu_17', rollNo: '17', univRoll: '250715', regNo: '25161131017', rollInt: 17, name: 'DEVRAJ KUMAR', fatherName: 'SANJEEV KUMAR RAY', motherName: 'LALA KUMARI', dob: '16/1/2008', branch: 'Mechatronics', semester: '3rd' },
   { id: 'mte_stu_18', rollNo: '18', univRoll: '250722', regNo: '25161131018', rollInt: 18, name: 'PIYUSH KUMAR', fatherName: 'MANOJ KUMAR', motherName: 'SRIJANTI DEVI', dob: '21/6/2005', branch: 'Mechatronics', semester: '3rd' },
   { id: 'mte_stu_19', rollNo: '19', univRoll: 'YB240712', regNo: '24161131012', rollInt: 19, name: 'VISHWJEET PRATAP SINGH', fatherName: 'BHANU PRATAP SINGH', motherName: 'SEEMA SINGH', dob: '07/07/2003', branch: 'Mechatronics', semester: '3rd' },
-  // Sample Placeholder Seats (Total Capacity: 30 Seats)
-  { id: 'mte_stu_20', rollNo: '20', univRoll: '250726', regNo: '25161131020', rollInt: 20, name: 'S1', fatherName: '', motherName: '', dob: '', branch: 'Mechatronics', semester: '3rd' },
-  { id: 'mte_stu_21', rollNo: '21', univRoll: '250727', regNo: '25161131021', rollInt: 21, name: 'S2', fatherName: '', motherName: '', dob: '', branch: 'Mechatronics', semester: '3rd' },
-  { id: 'mte_stu_22', rollNo: '22', univRoll: '250728', regNo: '25161131022', rollInt: 22, name: 'S3', fatherName: '', motherName: '', dob: '', branch: 'Mechatronics', semester: '3rd' },
-  { id: 'mte_stu_23', rollNo: '23', univRoll: '250729', regNo: '25161131023', rollInt: 23, name: 'S4', fatherName: '', motherName: '', dob: '', branch: 'Mechatronics', semester: '3rd' },
-  { id: 'mte_stu_24', rollNo: '24', univRoll: '250730', regNo: '25161131024', rollInt: 24, name: 'S5', fatherName: '', motherName: '', dob: '', branch: 'Mechatronics', semester: '3rd' },
-  { id: 'mte_stu_25', rollNo: '25', univRoll: '250731', regNo: '25161131025', rollInt: 25, name: 'S6', fatherName: '', motherName: '', dob: '', branch: 'Mechatronics', semester: '3rd' },
-  { id: 'mte_stu_26', rollNo: '26', univRoll: '250732', regNo: '25161131026', rollInt: 26, name: 'S7', fatherName: '', motherName: '', dob: '', branch: 'Mechatronics', semester: '3rd' },
-  { id: 'mte_stu_27', rollNo: '27', univRoll: '250733', regNo: '25161131027', rollInt: 27, name: 'S8', fatherName: '', motherName: '', dob: '', branch: 'Mechatronics', semester: '3rd' },
-  { id: 'mte_stu_28', rollNo: '28', univRoll: '250734', regNo: '25161131028', rollInt: 28, name: 'S9', fatherName: '', motherName: '', dob: '', branch: 'Mechatronics', semester: '3rd' },
-  { id: 'mte_stu_29', rollNo: '29', univRoll: '250735', regNo: '25161131029', rollInt: 29, name: 'S10', fatherName: '', motherName: '', dob: '', branch: 'Mechatronics', semester: '3rd' },
-  { id: 'mte_stu_30', rollNo: '30', univRoll: '250736', regNo: '25161131030', rollInt: 30, name: 'S11', fatherName: '', motherName: '', dob: '', branch: 'Mechatronics', semester: '3rd' },
 ];
