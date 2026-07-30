@@ -611,38 +611,29 @@ export default function DashboardScreen({
 
                   {/* Actions Column: Live Punch Button, Room Pill, Edit Icon */}
                   <View style={{ flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-                    {/* Live Punch Button */}
+                    {/* Live Punch Play/Pause Icon Button */}
                     <TouchableOpacity
                       style={{
-                        flexDirection: 'row',
+                        width: 32,
+                        height: 32,
+                        borderRadius: 16,
                         alignItems: 'center',
-                        gap: 4,
-                        paddingHorizontal: 10,
-                        paddingVertical: 6,
-                        borderRadius: 12,
+                        justifyContent: 'center',
                         backgroundColor: isPunchIn
-                          ? '#EF4444' // Punch Out (Teacher Left)
+                          ? '#EF4444' // Pause icon (Red button when active)
                           : isPunchEnded
-                          ? (isLight ? '#E2E8F0' : 'rgba(255, 255, 255, 0.12)')
-                          : '#10B981', // Punch In (Teacher Came)
+                          ? (isLight ? '#E2E8F0' : 'rgba(255, 255, 255, 0.15)')
+                          : '#10B981', // Play icon (Green button to start)
                       }}
-                      onPress={() => handlePunchToggle(selectedDay, item, index)}
+                      onPress={() => triggerProtectedCRAction({ type: 'punch', data: { day: selectedDay, item, index } })}
                       activeOpacity={0.8}
+                      title={isPunchIn ? 'Pause Class' : isPunchEnded ? 'Reset' : 'Play Class'}
                     >
                       <Ionicons
-                        name={isPunchIn ? 'exit-outline' : isPunchEnded ? 'refresh-outline' : 'play-circle'}
-                        size={14}
+                        name={isPunchIn ? 'pause' : isPunchEnded ? 'refresh' : 'play'}
+                        size={15}
                         color={isPunchEnded ? colors.textSub : '#FFFFFF'}
                       />
-                      <Text
-                        style={{
-                          fontSize: 11,
-                          fontWeight: '800',
-                          color: isPunchEnded ? colors.textSub : '#FFFFFF',
-                        }}
-                      >
-                        {isPunchIn ? 'Teacher Left' : isPunchEnded ? 'Reset' : 'Teacher Came'}
-                      </Text>
                     </TouchableOpacity>
 
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
