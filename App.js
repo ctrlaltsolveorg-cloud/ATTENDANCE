@@ -55,9 +55,36 @@ export default function App() {
   const [cloudModalVisible, setCloudModalVisible] = useState(false);
   const [analyticsStudent, setAnalyticsStudent] = useState(null);
   const [themeMode, setThemeMode] = useState('light'); // 'light' | 'dark'
+  const [userRole, setUserRole] = useState('student'); // 'student' | 'cr'
+  const [roleModalVisible, setRoleModalVisible] = useState(false);
 
   const toggleTheme = () => {
     setThemeMode((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
+
+  const handleSwitchRole = (forcedRole) => {
+    if (forcedRole === 'cr') {
+      setUserRole('cr');
+      return;
+    }
+    if (forcedRole === 'student') {
+      setUserRole('student');
+      Alert.alert('🎓 Student View', 'Switched back to Read-Only Student View.');
+      return;
+    }
+
+    if (userRole === 'cr') {
+      setUserRole('student');
+      Alert.alert('🎓 Student View Activated', 'Switched back to Read-Only Student View.');
+    } else {
+      setRoleModalVisible(true);
+    }
+  };
+
+  const handleRolePasscodeSuccess = () => {
+    setRoleModalVisible(false);
+    setUserRole('cr');
+    Alert.alert('👑 CR Panel Unlocked', 'Switched to CR Admin Control Panel! Full management rights active.');
   };
 
   const [branchInfo, setBranchInfo] = useState(null);
@@ -191,6 +218,8 @@ export default function App() {
             onSelectStudent={setAnalyticsStudent}
             themeMode={themeMode}
             onToggleTheme={toggleTheme}
+            userRole={userRole}
+            onToggleRole={handleSwitchRole}
           />
         )}
 
@@ -232,6 +261,14 @@ export default function App() {
           />
         )}
       </View>
+
+      {/* CR Role Unlock Password Modal */}
+      <PasswordModal
+        visible={roleModalVisible}
+        onClose={() => setRoleModalVisible(false)}
+        onSuccess={handleRolePasscodeSuccess}
+        title="Enter CR Security Passcode"
+      />
 
       {/* Supabase Cloud Connection & Setup Modal */}
       <SupabaseConfigModal

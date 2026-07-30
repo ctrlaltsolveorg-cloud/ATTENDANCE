@@ -3,7 +3,7 @@ import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getTheme } from '../theme/theme';
 
-export default function Header({ branchInfo, title, subtitle, onOpenCloudConfig, themeMode = 'light', onToggleTheme }) {
+export default function Header({ branchInfo, title, subtitle, onOpenCloudConfig, themeMode = 'light', onToggleTheme, userRole = 'student', onSwitchRole }) {
   const currentTheme = getTheme(themeMode);
   const colors = currentTheme.colors;
   const isLight = themeMode === 'light';
@@ -17,6 +17,44 @@ export default function Header({ branchInfo, title, subtitle, onOpenCloudConfig,
         </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {/* CR Panel vs Student View Role Switcher Pill */}
+          {onSwitchRole && (
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 5,
+                paddingHorizontal: 10,
+                paddingVertical: 5,
+                borderRadius: 14,
+                backgroundColor: userRole === 'cr'
+                  ? (isLight ? '#FEF3C7' : 'rgba(245, 158, 11, 0.25)')
+                  : (isLight ? '#EEF2FF' : 'rgba(99, 102, 241, 0.2)'),
+                borderColor: userRole === 'cr'
+                  ? '#F59E0B'
+                  : colors.glassBorder,
+                borderWidth: 1,
+              }}
+              onPress={onSwitchRole}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name={userRole === 'cr' ? 'key' : 'school-outline'}
+                size={14}
+                color={userRole === 'cr' ? '#D97706' : colors.primary}
+              />
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontWeight: '800',
+                  color: userRole === 'cr' ? '#B45309' : colors.primary,
+                }}
+              >
+                {userRole === 'cr' ? '👑 CR Panel' : '🎓 Student View'}
+              </Text>
+            </TouchableOpacity>
+          )}
+
           {/* Theme Switcher Toggle */}
           {onToggleTheme && (
             <TouchableOpacity
