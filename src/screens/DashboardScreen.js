@@ -292,66 +292,6 @@ export default function DashboardScreen({
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
 
-        {/* 👑 CR Admin Control Panel Dashboard Card (Shown only when CR Mode is Active) */}
-        {userRole === 'cr' && (
-          <View style={[styles.crAdminCard, { backgroundColor: isLight ? 'rgba(254, 243, 199, 0.9)' : 'rgba(30, 20, 60, 0.95)', borderColor: '#F59E0B', boxShadow: colors.cardShadow }]}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="key" size={20} color="#D97706" />
-                <Text style={{ fontSize: 16, fontWeight: '900', color: isLight ? '#B45309' : '#FDE68A' }}>
-                  👑 CR Management Control Center
-                </Text>
-              </View>
-              <TouchableOpacity
-                style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: '#EF4444', borderWidth: 1 }}
-                onPress={() => onToggleRole && onToggleRole('student')}
-              >
-                <Text style={{ fontSize: 11, fontWeight: '800', color: '#EF4444' }}>Exit CR Mode</Text>
-              </TouchableOpacity>
-            </View>
-
-            <Text style={{ fontSize: 12, color: isLight ? '#92400E' : '#FCD34D', marginBottom: 12, fontWeight: '500' }}>
-              Active Class Representative Controls: Punch teacher arrivals/leaves, post notices, change rooms, & mark roll call.
-            </Text>
-
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-              <TouchableOpacity
-                style={styles.crActionChip}
-                onPress={() => onNavigate('mark')}
-              >
-                <Ionicons name="checkbox-outline" size={14} color="#FFFFFF" />
-                <Text style={styles.crActionChipText}>Mark Roll Call</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.crActionChip}
-                onPress={() => triggerProtectedCRAction({ type: 'editNotice' })}
-              >
-                <Ionicons name="megaphone-outline" size={14} color="#FFFFFF" />
-                <Text style={styles.crActionChipText}>Post Announcement</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.crActionChip}
-                onPress={() => onNavigate('reports')}
-              >
-                <Ionicons name="document-text-outline" size={14} color="#FFFFFF" />
-                <Text style={styles.crActionChipText}>Export Register PDF</Text>
-              </TouchableOpacity>
-
-              {onOpenCloudConfig && (
-                <TouchableOpacity
-                  style={styles.crActionChip}
-                  onPress={onOpenCloudConfig}
-                >
-                  <Ionicons name="cloud-upload-outline" size={14} color="#FFFFFF" />
-                  <Text style={styles.crActionChipText}>Cloud DB Sync</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-        )}
-
         {/* 🎥 Unified Hero Section with Background Video */}
         <View style={[styles.videoHeroContainer, { borderColor: isLight ? 'rgba(99, 102, 241, 0.3)' : 'rgba(168, 85, 247, 0.4)', boxShadow: colors.cardShadow }]}>
           {Platform.OS === 'web' ? (
