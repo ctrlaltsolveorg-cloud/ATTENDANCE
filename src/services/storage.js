@@ -8,7 +8,7 @@ const KEYS = {
   SUBJECTS: '@pce_attendance_subjects',
   ATTENDANCE: '@pce_attendance_records',
   NOTICE: '@pce_attendance_notice',
-  ROUTINE: '@pce_attendance_routine_v7',
+  ROUTINE: '@pce_attendance_routine_v10',
   LIVE_PUNCHES: '@pce_attendance_live_punches_v1',
 };
 
@@ -826,10 +826,21 @@ export const saveNotice = async (noticeText) => {
 export const getRoutine = async () => {
   try {
     const data = await AsyncStorage.getItem(KEYS.ROUTINE);
-    return data ? JSON.parse(data) : DEFAULT_WEEKLY_ROUTINE;
-  } catch (e) {
-    return DEFAULT_WEEKLY_ROUTINE;
-  }
+    if (data) {
+      const parsed = JSON.parse(data);
+      if (
+        parsed &&
+        parsed.Monday &&
+        Array.isArray(parsed.Monday) &&
+        parsed.Monday.some((item) => item.code === 'FM&M' && item.room === '123')
+      ) {
+        return parsed;
+      }
+    }
+  } catch (e) {}
+
+  await AsyncStorage.setItem(KEYS.ROUTINE, JSON.stringify(DEFAULT_WEEKLY_ROUTINE));
+  return DEFAULT_WEEKLY_ROUTINE;
 };
 
 export const saveRoutine = async (routineObj) => {

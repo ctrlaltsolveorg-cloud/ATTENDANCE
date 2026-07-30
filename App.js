@@ -45,6 +45,7 @@ import DashboardScreen from './src/screens/DashboardScreen';
 import MarkAttendanceScreen from './src/screens/MarkAttendanceScreen';
 import StudentListScreen from './src/screens/StudentListScreen';
 import ReportsScreen from './src/screens/ReportsScreen';
+import PasswordModal from './src/components/PasswordModal';
 import SupabaseConfigModal from './src/components/SupabaseConfigModal';
 import StudentAnalyticsModal from './src/components/StudentAnalyticsModal';
 
