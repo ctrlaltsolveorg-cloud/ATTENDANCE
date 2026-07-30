@@ -19,6 +19,8 @@ import {
   saveNotice,
   getRoutine,
   saveRoutine,
+  getLivePunches,
+  saveLivePunches,
   DEFAULT_NOTICE,
   DEFAULT_WEEKLY_ROUTINE,
 } from '../services/storage';
@@ -26,6 +28,32 @@ import {
 const getCurrentDayName = () => {
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   return days[new Date().getDay()];
+};
+
+const parseTimeStringToMinutes = (tStr) => {
+  try {
+    if (!tStr) return 0;
+    tStr = tStr.trim();
+    const isPM = tStr.toUpperCase().includes('PM');
+    const clean = tStr.replace(/(AM|PM)/i, '').trim();
+    let [h, m] = clean.split(':').map(Number);
+    if (isPM && h !== 12) h += 12;
+    if (!isPM && h === 12) h = 0;
+    return h * 60 + m;
+  } catch (e) {
+    return 0;
+  }
+};
+
+const getNowTimeInfo = () => {
+  const now = new Date();
+  const hours = now.getHours();
+  const mins = now.getMinutes();
+  const isPM = hours >= 12;
+  const h12 = hours % 12 || 12;
+  const timeStr = `${h12}:${mins < 10 ? '0' : ''}${mins} ${isPM ? 'PM' : 'AM'}`;
+  const totalMins = hours * 60 + mins;
+  return { timeStr, totalMins, timestamp: now.getTime() };
 };
 
 const getPeriodStatus = (timeStr) => {
@@ -102,6 +130,9 @@ export default function DashboardScreen({
   // Live timer tick for real-time progress bar fill
   const [, setTick] = useState(0);
 
+  // Live Teacher Check-in / Punching State
+  const [livePunches, setLivePunches] = useState({});
+
   useEffect(() => {
     loadNoticeAndRoutine();
 
@@ -114,8 +145,65 @@ export default function DashboardScreen({
   const loadNoticeAndRoutine = async () => {
     const n = await getNotice();
     const r = await getRoutine();
+    const p = await getLivePunches();
     setNoticeText(n || DEFAULT_NOTICE);
     setRoutineObj(r || DEFAULT_WEEKLY_ROUTINE);
+    setLivePunches(p || {});
+  };
+
+  const handlePunchToggle = async (day, item, index) => {
+    const slotKey = `${day}_${item.period}_${index}`;
+    const nowInfo = getNowTimeInfo();
+    const currentPunch = livePunches[slotKey] || { status: 'NOT_STARTED' };
+
+    const timeParts = item.time.split('-');
+    const schedStartMin = timeParts.length === 2 ? parseTimeStringToMinutes(timeParts[0]) : nowInfo.totalMins;
+    const schedEndMin = timeParts.length === 2 ? parseTimeStringToMinutes(timeParts[1]) : nowInfo.totalMins;
+
+    let updatedPunch = {};
+
+    if (currentPunch.status === 'NOT_STARTED' || !currentPunch.status) {
+      // 🟢 PUNCH IN: Teacher Came
+      const lateMins = Math.max(0, nowInfo.totalMins - schedStartMin);
+      updatedPunch = {
+        status: 'IN_CLASS',
+        startTime: nowInfo.timeStr,
+        startMins: nowInfo.totalMins,
+        startedAtMs: nowInfo.timestamp,
+        lateMins,
+      };
+      Alert.alert(
+        '🟢 Teacher Arrived',
+        `Teacher arrived & started class at ${nowInfo.timeStr}${lateMins > 0 ? ` (${lateMins} mins late)` : ' (On Time!)'}\nTimeline is now LIVE GREEN!`
+      );
+    } else if (currentPunch.status === 'IN_CLASS') {
+      // 🔴 PUNCH OUT: Teacher Left
+      const earlyMins = Math.max(0, schedEndMin - nowInfo.totalMins);
+      const durationMins = Math.max(1, nowInfo.totalMins - (currentPunch.startMins || schedStartMin));
+      updatedPunch = {
+        ...currentPunch,
+        status: 'ENDED',
+        endTime: nowInfo.timeStr,
+        endMins: nowInfo.totalMins,
+        endedAtMs: nowInfo.timestamp,
+        earlyMins,
+        durationMins,
+      };
+      Alert.alert(
+        '🏁 Teacher Left',
+        `Teacher left class at ${nowInfo.timeStr}.\nActual Duration Held: ${durationMins} mins${earlyMins > 0 ? ` (${earlyMins} mins early)` : ' (Full session held)'}`
+      );
+    } else {
+      // Reset Punch
+      updatedPunch = { status: 'NOT_STARTED' };
+    }
+
+    const updatedMap = {
+      ...livePunches,
+      [slotKey]: updatedPunch,
+    };
+    setLivePunches(updatedMap);
+    await saveLivePunches(updatedMap);
   };
 
   const triggerProtectedCRAction = (action) => {
@@ -166,7 +254,9 @@ export default function DashboardScreen({
   };
 
   const todayDayName = getCurrentDayName();
-  const todayClasses = routineObj[todayDayName] || routineObj['Monday'];
+  const [selectedDay, setSelectedDay] = useState(getCurrentDayName() === 'Sunday' ? 'Monday' : getCurrentDayName());
+  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const displayedClasses = routineObj[selectedDay] || routineObj['Monday'];
 
   const getPctColor = (pct) => {
     if (pct >= 75) return '#10B981'; // Emerald Green
@@ -185,8 +275,8 @@ export default function DashboardScreen({
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
 
-        {/* Hero Background Video Banner Strip */}
-        <View style={styles.videoStripContainer}>
+        {/* 🎥 Unified Hero Section with Background Video */}
+        <View style={[styles.videoHeroContainer, { borderColor: isLight ? 'rgba(99, 102, 241, 0.3)' : 'rgba(168, 85, 247, 0.4)', boxShadow: colors.cardShadow }]}>
           {Platform.OS === 'web' ? (
             <video
               src={require('../../assets/logov.mp4')}
@@ -202,7 +292,7 @@ export default function DashboardScreen({
                 width: '100%',
                 height: '100%',
                 objectFit: 'cover',
-                opacity: 0.45,
+                opacity: isLight ? 0.4 : 0.6,
                 pointerEvents: 'none',
               }}
             />
@@ -210,73 +300,144 @@ export default function DashboardScreen({
             <View style={styles.videoFallback} />
           )}
 
-          {/* Dark Glass Overlay & Content Strip */}
-          <View style={styles.videoStripOverlay}>
-            <View style={styles.stripHeaderBadge}>
-              <Ionicons name="sparkles" size={14} color="#818CF8" />
-              <Text style={styles.stripBadgeText}>MECHATRONICS DEPT</Text>
-            </View>
-            <Text style={styles.stripTitle}>Purnea College of Engineering</Text>
-            <Text style={styles.stripSubtitle}>3rd Semester Attendance Portal • BEU Patna</Text>
-          </View>
-        </View>
+          {/* Semi-transparent Glass Tint Overlay for legibility */}
+          <View style={[styles.videoHeroOverlay, { backgroundColor: isLight ? 'rgba(255, 255, 255, 0.65)' : 'rgba(11, 15, 35, 0.72)' }]} />
 
-        {/* Quick Action Button */}
-        <TouchableOpacity
-          style={styles.markCTA}
-          activeOpacity={0.8}
-          onPress={() => onNavigate('mark')}
-        >
-          <View style={styles.markCTAContent}>
-            <View style={styles.markCTAIcon}>
-              <Ionicons name="checkbox" size={24} color="#FFFFFF" />
+          {/* Floating Cards & Elements Inside Video Container */}
+          <View style={{ position: 'relative', zIndex: 2, padding: 14, gap: 12 }}>
+            {/* Hero Header Content */}
+            <View style={styles.heroStripContent}>
+              <View style={styles.stripHeaderBadge}>
+                <Ionicons name="sparkles" size={14} color="#818CF8" />
+                <Text style={styles.stripBadgeText}>MECHATRONICS DEPT</Text>
+              </View>
+              <Text style={[styles.stripTitle, { color: isLight ? '#0F172A' : '#F8FAFC' }]}>Purnea College of Engineering</Text>
+              <Text style={[styles.stripSubtitle, { color: isLight ? '#334155' : '#CBD5E1' }]}>3rd Semester Attendance Portal • BEU Patna</Text>
             </View>
-            <Text style={styles.markCTATitle}>Mark Attendance</Text>
-          </View>
 
-          <View style={styles.markCTAArrow}>
-            <Ionicons name="arrow-forward" size={18} color="#4F46E5" />
-          </View>
-        </TouchableOpacity>
-
-        {/* 📢 CR Important Notice Board Banner Card */}
-        <View style={[styles.noticeCard, { backgroundColor: isLight ? '#EEF2FF' : 'rgba(30, 20, 60, 0.85)', borderColor: isLight ? '#C7D2FE' : '#8B5CF6', boxShadow: colors.cardShadow }]}>
-          <View style={styles.noticeHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Ionicons name="megaphone" size={18} color={isLight ? '#4F46E5' : '#C084FC'} />
-              <Text style={[styles.noticeTitle, { color: isLight ? '#3730A3' : '#F8FAFC' }]}>CR Important Announcement</Text>
-            </View>
+            {/* Quick Action Floating CTA Button */}
             <TouchableOpacity
-              style={[styles.crEditIconBtn, { backgroundColor: isLight ? '#E0E7FF' : 'rgba(168, 85, 247, 0.2)', borderColor: isLight ? '#C7D2FE' : 'rgba(168, 85, 247, 0.4)' }]}
-              onPress={() => triggerProtectedCRAction({ type: 'editNotice' })}
-              activeOpacity={0.7}
-              title="Edit Notice"
+              style={[styles.markCTA, { backgroundColor: isLight ? 'rgba(79, 70, 229, 0.92)' : 'rgba(124, 58, 237, 0.88)' }]}
+              activeOpacity={0.8}
+              onPress={() => onNavigate('mark')}
             >
-              <Ionicons name="pencil" size={14} color={isLight ? '#4F46E5' : '#C084FC'} />
+              <View style={styles.markCTAContent}>
+                <View style={styles.markCTAIcon}>
+                  <Ionicons name="checkbox" size={24} color="#FFFFFF" />
+                </View>
+                <Text style={styles.markCTATitle}>Mark Attendance</Text>
+              </View>
+
+              <View style={styles.markCTAArrow}>
+                <Ionicons name="arrow-forward" size={18} color="#4F46E5" />
+              </View>
             </TouchableOpacity>
+
+            {/* 📢 CR Important Notice Board Banner Floating Glass Card */}
+            <View style={[styles.noticeCard, { backgroundColor: isLight ? 'rgba(238, 242, 255, 0.9)' : 'rgba(30, 20, 60, 0.88)', borderColor: isLight ? '#C7D2FE' : '#8B5CF6' }]}>
+              <View style={styles.noticeHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Ionicons name="megaphone" size={18} color={isLight ? '#4F46E5' : '#C084FC'} />
+                  <Text style={[styles.noticeTitle, { color: isLight ? '#3730A3' : '#F8FAFC' }]}>CR Important Announcement</Text>
+                </View>
+                <TouchableOpacity
+                  style={[styles.crEditIconBtn, { backgroundColor: isLight ? '#E0E7FF' : 'rgba(168, 85, 247, 0.2)', borderColor: isLight ? '#C7D2FE' : 'rgba(168, 85, 247, 0.4)' }]}
+                  onPress={() => triggerProtectedCRAction({ type: 'editNotice' })}
+                  activeOpacity={0.7}
+                  title="Edit Notice"
+                >
+                  <Ionicons name="pencil" size={14} color={isLight ? '#4F46E5' : '#C084FC'} />
+                </TouchableOpacity>
+              </View>
+              <Text style={[styles.noticeContentText, { color: isLight ? '#312E81' : '#E9D5FF' }]}>
+                {noticeText}
+              </Text>
+            </View>
           </View>
-          <Text style={[styles.noticeContentText, { color: isLight ? '#312E81' : '#E9D5FF' }]}>
-            {noticeText}
-          </Text>
         </View>
 
-        {/* 🏫 Classes Going On / Today's Routine Schedule Card */}
+        {/* 🏫 Classes Going On / Today's & Weekly Routine Schedule Card */}
         <View style={[styles.routineCard, { backgroundColor: colors.bgCard, borderColor: colors.glassBorder, boxShadow: colors.cardShadow }]}>
           <View style={styles.routineHeader}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Ionicons name="time" size={20} color={colors.primary} />
-              <Text style={[styles.routineTitle, { color: colors.textMain }]}>Today's Live Classes</Text>
+              <Text style={[styles.routineTitle, { color: colors.textMain }]}>Daily Class Routine</Text>
             </View>
             <View style={[styles.dayBadge, { backgroundColor: isLight ? '#EEF2FF' : 'rgba(15, 23, 42, 0.8)' }]}>
-              <Text style={[styles.dayBadgeText, { color: colors.primary }]}>{todayDayName}</Text>
+              <Text style={[styles.dayBadgeText, { color: colors.primary }]}>{selectedDay}</Text>
             </View>
           </View>
 
-          <View style={{ gap: 10, marginTop: 12 }}>
-            {todayClasses
+          {/* Day Selector Filter Pills */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 10, marginBottom: 4 }}>
+            {daysOfWeek.map((day) => {
+              const isSelected = day === selectedDay;
+              const isToday = day === todayDayName;
+              return (
+                <TouchableOpacity
+                  key={day}
+                  onPress={() => setSelectedDay(day)}
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: 20,
+                    marginRight: 8,
+                    backgroundColor: isSelected
+                      ? colors.primary
+                      : (isLight ? '#EEF2FF' : 'rgba(30, 41, 59, 0.7)'),
+                    borderColor: isSelected ? colors.primary : (isToday ? colors.primary : colors.glassBorder),
+                    borderWidth: 1,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 5,
+                  }}
+                >
+                  {isToday && (
+                    <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: isSelected ? '#FFFFFF' : '#10B981' }} />
+                  )}
+                  <Text style={{
+                    fontSize: 12,
+                    fontWeight: isSelected ? '800' : '600',
+                    color: isSelected ? '#FFFFFF' : (isToday ? colors.primary : colors.textMain),
+                  }}>
+                    {day} {isToday ? '(Today)' : ''}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          <View style={{ gap: 10, marginTop: 10 }}>
+            {displayedClasses
               .filter((item) => item.code !== 'RECESS' && item.period !== 'RECESS')
               .map((item, index) => {
-              const status = getPeriodStatus(item.time);
+              const slotKey = `${selectedDay}_${item.period}_${index}`;
+              const punch = livePunches[slotKey] || { status: 'NOT_STARTED' };
+              const isPunchIn = punch.status === 'IN_CLASS';
+              const isPunchEnded = punch.status === 'ENDED';
+
+              const status = selectedDay === todayDayName ? getPeriodStatus(item.time) : { isOngoing: false, isCompleted: false, pct: 0, minsRemaining: 0 };
+
+              // Determine row background & border colors based on live punch status
+              let rowBg = isPunchIn
+                ? (isLight ? '#ECFDF5' : 'rgba(6, 78, 59, 0.45)')
+                : isPunchEnded
+                ? (isLight ? '#F8FAFC' : 'rgba(15, 23, 42, 0.4)')
+                : status.isOngoing
+                ? (isLight ? '#ECFDF5' : 'rgba(6, 78, 59, 0.35)')
+                : status.isCompleted
+                ? (isLight ? '#F8FAFC' : 'rgba(15, 23, 42, 0.3)')
+                : colors.bgGlass;
+
+              let rowBorder = isPunchIn
+                ? '#10B981'
+                : isPunchEnded
+                ? (isLight ? '#CBD5E1' : '#334155')
+                : status.isOngoing
+                ? '#10B981'
+                : status.isCompleted
+                ? (isLight ? '#E2E8F0' : '#1E293B')
+                : colors.glassBorder;
 
               return (
                 <View
@@ -284,27 +445,37 @@ export default function DashboardScreen({
                   style={[
                     styles.periodRow,
                     {
-                      backgroundColor: status.isOngoing
-                        ? (isLight ? '#ECFDF5' : 'rgba(6, 78, 59, 0.4)')
-                        : status.isCompleted
-                        ? (isLight ? '#F8FAFC' : 'rgba(15, 23, 42, 0.3)')
-                        : colors.bgGlass,
-                      borderColor: status.isOngoing
-                        ? '#10B981'
-                        : status.isCompleted
-                        ? (isLight ? '#E2E8F0' : '#1E293B')
-                        : colors.glassBorder,
+                      backgroundColor: rowBg,
+                      borderColor: rowBorder,
+                      borderLeftWidth: isPunchIn ? 5 : isPunchEnded ? 4 : 1,
+                      borderLeftColor: isPunchIn ? '#10B981' : isPunchEnded ? '#6366F1' : rowBorder,
                     },
                   ]}
                 >
                   <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    {/* Header Row: Period Badge, Scheduled Time, Live / Punch Status Pills */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 6 }}>
                       <View style={[styles.periodBadge, { backgroundColor: isLight ? '#EEF2FF' : 'rgba(15, 23, 42, 0.8)' }]}>
                         <Text style={[styles.periodBadgeText, { color: colors.primary }]}>P-{item.period}</Text>
                       </View>
                       <Text style={[styles.periodTime, { color: colors.textSub }]}>{item.time}</Text>
 
-                      {status.isOngoing ? (
+                      {/* Live Punch Status Badges */}
+                      {isPunchIn ? (
+                        <View style={[styles.livePill, { backgroundColor: '#10B981' }]}>
+                          <View style={styles.liveDot} />
+                          <Text style={[styles.liveText, { color: '#FFFFFF' }]}>
+                            IN CLASS ({punch.startTime})
+                          </Text>
+                        </View>
+                      ) : isPunchEnded ? (
+                        <View style={[styles.livePill, { backgroundColor: isLight ? '#E0E7FF' : 'rgba(99, 102, 241, 0.2)', borderColor: isLight ? '#C7D2FE' : '#6366F1', borderWidth: 1 }]}>
+                          <Ionicons name="checkmark-done" size={10} color={isLight ? '#4338CA' : '#818CF8'} />
+                          <Text style={[styles.liveText, { color: isLight ? '#4338CA' : '#818CF8' }]}>
+                            LEFT AT {punch.endTime}
+                          </Text>
+                        </View>
+                      ) : status.isOngoing ? (
                         <View style={styles.livePill}>
                           <View style={styles.liveDot} />
                           <Text style={styles.liveText}>LIVE {status.pct}%</Text>
@@ -317,12 +488,39 @@ export default function DashboardScreen({
                       ) : null}
                     </View>
 
-                    <Text style={[styles.periodSubject, { color: colors.textMain }]}>
-                      {item.code} • {item.faculty}
-                    </Text>
+                    {/* Subject & Teacher Name */}
+                    <View style={{ marginTop: 2 }}>
+                      <Text style={[styles.periodSubject, { color: colors.textMain, fontSize: 15, fontWeight: '700' }]}>
+                        {item.code}
+                      </Text>
+                      {item.faculty && item.faculty !== '-' ? (
+                        <Text style={{ fontSize: 12, fontWeight: '500', color: isLight ? '#64748B' : '#94A3B8', marginTop: 2, opacity: 0.85 }}>
+                          {item.faculty.replace(/\b(Prof\.|Dr\.|Prof|Dr)\b\s*/gi, '').trim()}
+                        </Text>
+                      ) : null}
+                    </View>
+
+                    {/* Teacher Live Punch Arrival & Departure Timeline Details */}
+                    {isPunchIn && (
+                      <View style={{ marginTop: 6, backgroundColor: 'rgba(16, 185, 129, 0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, alignSelf: 'flex-start' }}>
+                        <Text style={{ fontSize: 11, fontWeight: '700', color: isLight ? '#047857' : '#34D399' }}>
+                          🟢 Arrived: {punch.startTime} {punch.lateMins > 0 ? `(${punch.lateMins} mins late)` : '• On Time!'}
+                        </Text>
+                      </View>
+                    )}
+
+                    {isPunchEnded && (
+                      <View style={{ marginTop: 6, backgroundColor: isLight ? '#EEF2FF' : 'rgba(99, 102, 241, 0.18)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, alignSelf: 'flex-start' }}>
+                        <Text style={{ fontSize: 11, fontWeight: '700', color: isLight ? '#3730A3' : '#A5B4FC' }}>
+                          ⏱️ Duration: {punch.durationMins} mins ({punch.startTime} - {punch.endTime})
+                          {punch.lateMins > 0 ? ` • ${punch.lateMins}m late` : ''}
+                          {punch.earlyMins > 0 ? ` • Left ${punch.earlyMins}m early` : ' • Full session'}
+                        </Text>
+                      </View>
+                    )}
 
                     {/* Real-time Filling Progress Bar */}
-                    {status.isOngoing && (
+                    {status.isOngoing && !isPunchIn && !isPunchEnded && (
                       <View style={{ marginTop: 8, paddingRight: 10 }}>
                         <View style={{ height: 6, backgroundColor: isLight ? '#A7F3D0' : 'rgba(6, 78, 59, 0.8)', borderRadius: 3, overflow: 'hidden' }}>
                           <View style={{ height: '100%', width: `${status.pct}%`, backgroundColor: '#10B981', borderRadius: 3 }} />
@@ -334,19 +532,56 @@ export default function DashboardScreen({
                     )}
                   </View>
 
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <View style={[styles.roomPill, { backgroundColor: isLight ? '#FEF3C7' : 'rgba(245, 158, 11, 0.2)', borderColor: isLight ? '#FDE68A' : '#F59E0B' }]}>
-                      <Text style={styles.roomPillText}>Room {item.room}</Text>
-                    </View>
-
+                  {/* Actions Column: Live Punch Button, Room Pill, Edit Icon */}
+                  <View style={{ flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+                    {/* Live Punch Button */}
                     <TouchableOpacity
-                      style={[styles.changeRoomIconBtn, { backgroundColor: isLight ? '#EEF2FF' : 'rgba(15, 23, 42, 0.8)', borderColor: colors.glassBorder }]}
-                      onPress={() => triggerProtectedCRAction({ type: 'editRoom', data: { day: todayDayName, index, room: item.room, name: item.name } })}
-                      activeOpacity={0.7}
-                      title="Change Room"
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 4,
+                        paddingHorizontal: 10,
+                        paddingVertical: 6,
+                        borderRadius: 12,
+                        backgroundColor: isPunchIn
+                          ? '#EF4444' // Punch Out (Teacher Left)
+                          : isPunchEnded
+                          ? (isLight ? '#E2E8F0' : 'rgba(255, 255, 255, 0.12)')
+                          : '#10B981', // Punch In (Teacher Came)
+                      }}
+                      onPress={() => handlePunchToggle(selectedDay, item, index)}
+                      activeOpacity={0.8}
                     >
-                      <Ionicons name="pencil" size={12} color={colors.primary} />
+                      <Ionicons
+                        name={isPunchIn ? 'exit-outline' : isPunchEnded ? 'refresh-outline' : 'play-circle'}
+                        size={14}
+                        color={isPunchEnded ? colors.textSub : '#FFFFFF'}
+                      />
+                      <Text
+                        style={{
+                          fontSize: 11,
+                          fontWeight: '800',
+                          color: isPunchEnded ? colors.textSub : '#FFFFFF',
+                        }}
+                      >
+                        {isPunchIn ? 'Teacher Left' : isPunchEnded ? 'Reset' : 'Teacher Came'}
+                      </Text>
                     </TouchableOpacity>
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <View style={[styles.roomPill, { backgroundColor: isLight ? '#FEF3C7' : 'rgba(245, 158, 11, 0.2)', borderColor: isLight ? '#FDE68A' : '#F59E0B' }]}>
+                        <Text style={styles.roomPillText}>Room {item.room}</Text>
+                      </View>
+
+                      <TouchableOpacity
+                        style={[styles.changeRoomIconBtn, { backgroundColor: isLight ? '#EEF2FF' : 'rgba(15, 23, 42, 0.8)', borderColor: colors.glassBorder }]}
+                        onPress={() => triggerProtectedCRAction({ type: 'editRoom', data: { day: selectedDay, index, room: item.room, name: item.name } })}
+                        activeOpacity={0.7}
+                        title="Change Room"
+                      >
+                        <Ionicons name="pencil" size={12} color={colors.primary} />
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
               );
@@ -596,6 +831,21 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
+  },
+  videoHeroContainer: {
+    width: '100%',
+    marginBottom: 16,
+    borderRadius: 20,
+    overflow: 'hidden',
+    position: 'relative',
+    borderWidth: 1,
+  },
+  videoHeroOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 1,
+  },
+  heroStripContent: {
+    paddingVertical: 4,
   },
   videoStripContainer: {
     width: '100%',

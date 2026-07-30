@@ -8,61 +8,66 @@ const KEYS = {
   SUBJECTS: '@pce_attendance_subjects',
   ATTENDANCE: '@pce_attendance_records',
   NOTICE: '@pce_attendance_notice',
-  ROUTINE: '@pce_attendance_routine',
+  ROUTINE: '@pce_attendance_routine_v7',
+  LIVE_PUNCHES: '@pce_attendance_live_punches_v1',
 };
 
 export const DEFAULT_NOTICE = "📢 Today's Announcement: SOM class will be held in Room 115 for Hackathon Seminar orientation.";
 
 export const DEFAULT_WEEKLY_ROUTINE = {
   Monday: [
-    { period: 'I', time: '10:00 AM - 10:50 AM', code: 'FM&M', name: 'Fluid Mechanics & Machinery', faculty: 'RC Sahani', room: '123' },
-    { period: 'II', time: '10:50 AM - 11:40 AM', code: 'M-III', name: 'Eng. Mathematics III', faculty: 'Shwetambara', room: '202' },
-    { period: 'III', time: '11:40 AM - 12:30 PM', code: 'EM', name: 'Eng. Mechanics', faculty: 'Ravi Anand', room: '202' },
-    { period: 'IV', time: '12:30 PM - 01:20 PM', code: 'UHV', name: 'Universal Human Value', faculty: 'Uday Kr. Singh', room: '202' },
-    { period: 'RECESS', time: '01:20 PM - 02:00 PM', code: 'RECESS', name: 'Lunch Break / Recess', faculty: '-', room: 'Cafeteria' },
-    { period: 'V', time: '02:00 PM - 04:00 PM', code: 'EM LAB', name: 'Eng. Mechanics Lab (161301P)', faculty: 'Md. Saquib Akhtar', room: 'EM Lab' },
-    { period: 'VI', time: '04:00 PM - 04:50 PM', code: 'IKS', name: 'Indian Knowledge System', faculty: 'Raushan Kumar', room: '202' },
+    { period: 'I', time: '10:00 AM - 10:50 AM', code: 'FM&M', name: 'Fluid Mechanics & Machinery (L)', faculty: 'Ramchandra Sahani (RC Sahani)', room: '123' },
+    { period: 'II', time: '10:50 AM - 11:40 AM', code: 'M-III', name: 'Eng. Mathematics III (L)', faculty: 'Shwetambara (Dr. S)', room: '202' },
+    { period: 'III', time: '11:40 AM - 12:30 PM', code: 'EM', name: 'Eng. Mechanics (L)', faculty: 'Ravi Anand (RA)', room: '202' },
+    { period: 'IV', time: '12:30 PM - 01:20 PM', code: 'UHV', name: 'Universal Human Value (L)', faculty: 'Dewasis Pal (DP)', room: '202' },
+    { period: 'RECESS', time: '01:20 PM - 02:00 PM', code: 'RECESS', name: 'Lunch Break / Recess', faculty: '-', room: 'Recess' },
+    { period: 'V', time: '02:00 PM - 04:00 PM', code: 'EM LAB', name: 'Eng. Mechanics Lab (161301P)', faculty: 'Md. Saquib Akhter / Md. Amanatullah', room: 'EM Lab' },
+    { period: 'VI', time: '04:00 PM - 04:50 PM', code: 'IKS', name: 'Indian Knowledge System (L)', faculty: 'Raushan Kumar (RNK)', room: '202' },
   ],
   Tuesday: [
-    { period: 'I', time: '10:00 AM - 10:50 AM', code: 'SOM', name: 'Strength of Material', faculty: 'Ratnesh Kumar', room: '123' },
-    { period: 'II', time: '10:50 AM - 11:40 AM', code: 'M-III', name: 'Eng. Mathematics III', faculty: 'Shwetambara', room: '202' },
-    { period: 'III', time: '11:40 AM - 12:30 PM', code: 'BM', name: 'Basic Mechatronics', faculty: 'Abhimanyu Kumar', room: '123' },
-    { period: 'IV', time: '12:30 PM - 01:20 PM', code: 'UHV', name: 'Universal Human Value', faculty: 'Uday Kr. Singh', room: '202' },
-    { period: 'RECESS', time: '01:20 PM - 02:00 PM', code: 'RECESS', name: 'Lunch Break / Recess', faculty: '-', room: 'Cafeteria' },
+    { period: 'I', time: '10:00 AM - 10:50 AM', code: 'SOM', name: 'Strength of Material (L)', faculty: 'Payal Priya (PP)', room: '123' },
+    { period: 'II', time: '10:50 AM - 11:40 AM', code: 'M-III', name: 'Eng. Mathematics III (L)', faculty: 'Shwetambara (Dr. S)', room: '202' },
+    { period: 'III', time: '11:40 AM - 12:30 PM', code: 'BM', name: 'Basic Mechatronics (L)', faculty: 'Abhimanyu Kumar (AK)', room: '123' },
+    { period: 'IV', time: '12:30 PM - 01:20 PM', code: 'UHV', name: 'Universal Human Value (L)', faculty: 'Dewasis Pal (DP)', room: '202' },
+    { period: 'RECESS', time: '01:20 PM - 02:00 PM', code: 'RECESS', name: 'Lunch Break / Recess', faculty: '-', room: 'Recess' },
     { period: 'V', time: '02:00 PM - 04:00 PM', code: 'SPOKEN', name: 'Spoken Tutorial Session', faculty: 'Dept Faculty', room: 'Language Lab' },
+    { period: 'VI', time: '04:00 PM - 04:50 PM', code: 'EM (T)', name: 'Eng. Mechanics (Tutorial)', faculty: 'Md. Saquib Akhter (MSA)', room: '202' },
   ],
   Wednesday: [
-    { period: 'I', time: '10:00 AM - 10:50 AM', code: 'BM', name: 'Basic Mechatronics', faculty: 'Abhimanyu Kumar', room: '123' },
-    { period: 'II', time: '10:50 AM - 11:40 AM', code: 'FM&M', name: 'Fluid Mechanics & Machinery', faculty: 'RC Sahani', room: '123' },
-    { period: 'III', time: '11:40 AM - 12:30 PM', code: 'M-III', name: 'Eng. Mathematics III', faculty: 'Shwetambara', room: '202' },
-    { period: 'IV', time: '12:30 PM - 01:20 PM', code: 'UHV', name: 'Universal Human Value', faculty: 'Uday Kr. Singh', room: '202' },
-    { period: 'RECESS', time: '01:20 PM - 02:00 PM', code: 'RECESS', name: 'Lunch Break / Recess', faculty: '-', room: 'Cafeteria' },
+    { period: 'I', time: '10:00 AM - 10:50 AM', code: 'BM', name: 'Basic Mechatronics (L)', faculty: 'Ratnesh Kumar (RK)', room: '123' },
+    { period: 'II', time: '10:50 AM - 11:40 AM', code: 'FM&M', name: 'Fluid Mechanics & Machinery (L)', faculty: 'Ramchandra Sahani (RC Sahani)', room: '123' },
+    { period: 'III', time: '11:40 AM - 12:30 PM', code: 'M-III (T)', name: 'Eng. Mathematics III (Tutorial)', faculty: 'Shwetambara (Dr. S)', room: '202' },
+    { period: 'IV', time: '12:30 PM - 01:20 PM', code: 'UHV', name: 'Universal Human Value (L)', faculty: 'Dewasis Pal (DP)', room: '202' },
+    { period: 'RECESS', time: '01:20 PM - 02:00 PM', code: 'RECESS', name: 'Lunch Break / Recess', faculty: '-', room: 'Recess' },
     { period: 'V', time: '02:00 PM - 04:00 PM', code: 'FM&M LAB', name: 'Fluid Mechanics Lab (161302P)', faculty: 'RC Sahani / Bipin Kr. Sharma', room: 'FM&M Lab' },
-    { period: 'VI', time: '04:00 PM - 04:50 PM', code: 'EM', name: 'Eng. Mechanics', faculty: 'Md. Saquib Akhtar', room: '202' },
+    { period: 'VI', time: '04:00 PM - 04:50 PM', code: 'LIBRARY', name: 'Library / Self Study', faculty: 'Library Incharge', room: 'Central Library' },
   ],
   Thursday: [
-    { period: 'I', time: '10:00 AM - 10:50 AM', code: 'EM', name: 'Eng. Mechanics', faculty: 'Md. Saquib Akhtar', room: '202' },
-    { period: 'II', time: '10:50 AM - 11:40 AM', code: 'M-III', name: 'Eng. Mathematics III', faculty: 'Shwetambara', room: '202' },
-    { period: 'III', time: '11:40 AM - 12:30 PM', code: 'SOM', name: 'Strength of Material', faculty: 'Ratnesh Kumar', room: '123' },
-    { period: 'IV', time: '12:30 PM - 01:20 PM', code: 'IKS', name: 'Indian Knowledge System', faculty: 'RC Sahani', room: '202' },
-    { period: 'RECESS', time: '01:20 PM - 02:00 PM', code: 'RECESS', name: 'Lunch Break / Recess', faculty: '-', room: 'Cafeteria' },
+    { period: 'I', time: '10:00 AM - 10:50 AM', code: 'EM', name: 'Eng. Mechanics (L)', faculty: 'Md. Saquib Akhter (MSA)', room: '202' },
+    { period: 'II', time: '10:50 AM - 11:40 AM', code: 'M-III', name: 'Eng. Mathematics III (L)', faculty: 'Shwetambara (Dr. S)', room: '202' },
+    { period: 'III', time: '11:40 AM - 12:30 PM', code: 'SOM', name: 'Strength of Material (L)', faculty: 'Payal Priya (PP)', room: '123' },
+    { period: 'IV', time: '12:30 PM - 01:20 PM', code: 'IKS', name: 'Indian Knowledge System (L)', faculty: 'Ramchandra Sahani (RC Sahani)', room: '202' },
+    { period: 'RECESS', time: '01:20 PM - 02:00 PM', code: 'RECESS', name: 'Lunch Break / Recess', faculty: '-', room: 'Recess' },
     { period: 'V', time: '02:00 PM - 04:00 PM', code: 'SPOKEN', name: 'Spoken Tutorial Session', faculty: 'Dept Faculty', room: 'Language Lab' },
+    { period: 'VI', time: '04:00 PM - 04:50 PM', code: 'SPOKEN', name: 'Spoken Tutorial Session', faculty: 'Dept Faculty', room: 'Language Lab' },
   ],
   Friday: [
-    { period: 'I', time: '10:00 AM - 10:50 AM', code: 'EM', name: 'Eng. Mechanics', faculty: 'Ravi Anand', room: '202' },
-    { period: 'II', time: '10:50 AM - 11:40 AM', code: 'BM', name: 'Basic Mechatronics', faculty: 'Dheeraj Kumar', room: '123' },
-    { period: 'III', time: '11:40 AM - 12:30 PM', code: 'SPOKEN', name: 'Spoken Tutorial', faculty: 'Dept Faculty', room: 'Language Lab' },
-    { period: 'IV', time: '12:30 PM - 01:20 PM', code: 'SPOKEN', name: 'Spoken Tutorial', faculty: 'Dept Faculty', room: 'Language Lab' },
-    { period: 'RECESS', time: '01:20 PM - 02:00 PM', code: 'RECESS', name: 'Lunch Break / Recess', faculty: '-', room: 'Cafeteria' },
-    { period: 'V', time: '02:00 PM - 04:00 PM', code: 'SOM LAB', name: 'Strength of Material Lab (161305P)', faculty: 'Payal Priya / Asif Ansari', room: 'SOM Lab' },
+    { period: 'I', time: '10:00 AM - 10:50 AM', code: 'EM', name: 'Eng. Mechanics (L)', faculty: 'Ravi Anand (RA)', room: '202' },
+    { period: 'II', time: '10:50 AM - 11:40 AM', code: 'BM', name: 'Basic Mechatronics (L)', faculty: 'Dheeraj Kumar (DK)', room: '123' },
+    { period: 'III', time: '11:40 AM - 12:30 PM', code: 'SPOKEN', name: 'Spoken Tutorial Session', faculty: 'Dept Faculty', room: 'Language Lab' },
+    { period: 'IV', time: '12:30 PM - 01:20 PM', code: 'SPOKEN', name: 'Spoken Tutorial Session', faculty: 'Dept Faculty', room: 'Language Lab' },
+    { period: 'RECESS', time: '01:20 PM - 02:00 PM', code: 'RECESS', name: 'Lunch Break / Recess', faculty: '-', room: 'Recess' },
+    { period: 'V', time: '02:00 PM - 04:00 PM', code: 'SPOKEN', name: 'Spoken Tutorial Session', faculty: 'Dept Faculty', room: 'Language Lab' },
+    { period: 'VI', time: '04:00 PM - 04:50 PM', code: 'SPOKEN', name: 'Spoken Tutorial Session', faculty: 'Dept Faculty', room: 'Language Lab' },
   ],
   Saturday: [
-    { period: 'I', time: '10:00 AM - 10:50 AM', code: 'FM&M', name: 'Fluid Mechanics & Machinery', faculty: 'RC Sahani', room: '123' },
-    { period: 'II', time: '10:50 AM - 11:40 AM', code: 'SOM', name: 'Strength of Material', faculty: 'Ratnesh Kumar', room: '123' },
-    { period: 'III', time: '11:40 AM - 12:30 PM', code: 'IKS', name: 'Indian Knowledge System', faculty: 'Uday Kr. Singh', room: '202' },
+    { period: 'I', time: '10:00 AM - 10:50 AM', code: 'FM&M', name: 'Fluid Mechanics & Machinery (L)', faculty: 'Ramchandra Sahani (RC Sahani)', room: '123' },
+    { period: 'II', time: '10:50 AM - 11:40 AM', code: 'SOM', name: 'Strength of Material (L)', faculty: 'Payal Priya (PP)', room: '123' },
+    { period: 'III', time: '11:40 AM - 12:30 PM', code: 'IKS', name: 'Indian Knowledge System (L)', faculty: 'Uday Kr. Singh (UKS)', room: '202' },
     { period: 'IV', time: '12:30 PM - 01:20 PM', code: 'LIBRARY', name: 'Library / Self Study', faculty: 'Library Incharge', room: 'Central Library' },
-    { period: 'RECESS', time: '01:20 PM - 02:00 PM', code: 'RECESS', name: 'Lunch Break / Recess', faculty: '-', room: 'Cafeteria' },
-    { period: 'V', time: '02:00 PM - 04:00 PM', code: 'LIBRARY', name: 'Library / Self Study', faculty: 'Library Incharge', room: 'Central Library' },
+    { period: 'RECESS', time: '01:20 PM - 02:00 PM', code: 'RECESS', name: 'Lunch Break / Recess', faculty: '-', room: 'Recess' },
+    { period: 'V', time: '02:00 PM - 04:00 PM', code: 'SOM LAB', name: 'Strength of Material Lab (161305P)', faculty: 'Payal Priya / Asif Ansari', room: 'SOM Lab' },
+    { period: 'VI', time: '04:00 PM - 04:50 PM', code: 'LIBRARY', name: 'Library / Self Study', faculty: 'Library Incharge', room: 'Central Library' },
   ],
   Sunday: [
     { period: 'OFF', time: 'All Day', code: 'HOLIDAY', name: 'Sunday Off', faculty: '-', room: '-' },
@@ -832,5 +837,22 @@ export const saveRoutine = async (routineObj) => {
     await AsyncStorage.setItem(KEYS.ROUTINE, JSON.stringify(routineObj));
   } catch (e) {
     console.error('Error saving routine:', e);
+  }
+};
+
+export const getLivePunches = async () => {
+  try {
+    const data = await AsyncStorage.getItem(KEYS.LIVE_PUNCHES);
+    return data ? JSON.parse(data) : {};
+  } catch (e) {
+    return {};
+  }
+};
+
+export const saveLivePunches = async (punchesObj) => {
+  try {
+    await AsyncStorage.setItem(KEYS.LIVE_PUNCHES, JSON.stringify(punchesObj));
+  } catch (e) {
+    console.error('Error saving live punches:', e);
   }
 };
