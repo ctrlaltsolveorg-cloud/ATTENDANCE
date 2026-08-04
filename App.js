@@ -48,9 +48,11 @@ import ReportsScreen from './src/screens/ReportsScreen';
 import PasswordModal from './src/components/PasswordModal';
 import SupabaseConfigModal from './src/components/SupabaseConfigModal';
 import StudentAnalyticsModal from './src/components/StudentAnalyticsModal';
+import IntroSplashScreen from './src/components/IntroSplashScreen';
 
 export default function App() {
   const [loading, setLoading] = useState(true);
+  const [dataReady, setDataReady] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'mark' | 'students' | 'reports'
   const [initialHoliday, setInitialHoliday] = useState(false);
   const [cloudModalVisible, setCloudModalVisible] = useState(false);
@@ -108,13 +110,14 @@ export default function App() {
   };
 
   const loadData = async () => {
-    setLoading(true);
     await initStorage();
 
-    const branch = await getBranchInfo();
-    const stuList = await getStudents();
-    const subList = await getSubjects();
-    const attRecords = await getAttendanceRecords();
+    const [branch, stuList, subList, attRecords] = await Promise.all([
+      getBranchInfo(),
+      getStudents(),
+      getSubjects(),
+      getAttendanceRecords(),
+    ]);
 
     setBranchInfo(branch);
     setStudents(stuList);
@@ -123,8 +126,7 @@ export default function App() {
 
     const computedStats = calculateStats(stuList, subList, attRecords);
     setStats(computedStats);
-
-    setLoading(false);
+    setDataReady(true);
   };
 
   useEffect(() => {
@@ -191,13 +193,8 @@ export default function App() {
     );
   };
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6366F1" />
-        <Text style={styles.loadingText}>Loading PCE Mechatronics Attendance...</Text>
-      </View>
-    );
+  if (loading || !dataReady) {
+    return <IntroSplashScreen onFinish={() => setLoading(false)} />;
   }
 
   return (

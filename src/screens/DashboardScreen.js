@@ -21,6 +21,8 @@ import {
   saveRoutine,
   getLivePunches,
   saveLivePunches,
+  getHolidayOverride,
+  saveHolidayOverride,
   DEFAULT_NOTICE,
   DEFAULT_WEEKLY_ROUTINE,
 } from '../services/storage';
@@ -125,9 +127,15 @@ export default function DashboardScreen({
   const [editingRoomSlot, setEditingRoomSlot] = useState(null); // { day, index, room }
   const [newRoomInput, setNewRoomInput] = useState('');
 
+  // College Closed / Holiday / Event Override State
+  const [holidayOverride, setHolidayOverride] = useState({ isClosed: false, reason: '', type: 'Event' });
+  const [editingHoliday, setEditingHoliday] = useState(false);
+  const [holidayReasonInput, setHolidayReasonInput] = useState('');
+  const [holidayTypeInput, setHolidayTypeInput] = useState('Event');
+
   // Password Protection Modal
   const [passcodeModalVisible, setPasscodeModalVisible] = useState(false);
-  const [pendingAction, setPendingAction] = useState(null); // { type: 'editNotice' | 'editRoom', data }
+  const [pendingAction, setPendingAction] = useState(null); // { type: 'editNotice' | 'editRoom' | 'declareHoliday', data }
 
   // Live timer tick for real-time progress bar fill
   const [, setTick] = useState(0);
@@ -148,12 +156,22 @@ export default function DashboardScreen({
     const n = await getNotice();
     const r = await getRoutine();
     const p = await getLivePunches();
+    const h = await getHolidayOverride();
     setNoticeText(n || DEFAULT_NOTICE);
     setRoutineObj(r || DEFAULT_WEEKLY_ROUTINE);
     setLivePunches(p || {});
+    setHolidayOverride(h || { isClosed: false, reason: '', type: 'Event' });
   };
 
   const handlePunchToggle = async (day, item, index) => {
+    if (holidayOverride.isClosed && day === todayDayName) {
+      Alert.alert(
+        '🎉 College Closed Today',
+        `Regular live attendance is suspended today for: ${holidayOverride.reason}`
+      );
+      return;
+    }
+
     const slotKey = `${day}_${item.period}_${index}`;
     const nowInfo = getNowTimeInfo();
     const currentPunch = livePunches[slotKey] || { status: 'NOT_STARTED' };
@@ -216,6 +234,10 @@ export default function DashboardScreen({
     } else if (action.type === 'editRoom') {
       setEditingRoomSlot(action.data);
       setNewRoomInput(action.data.room);
+    } else if (action.type === 'declareHoliday') {
+      setHolidayReasonInput(holidayOverride.reason || '');
+      setHolidayTypeInput(holidayOverride.type || 'Event');
+      setEditingHoliday(true);
     } else if (action.type === 'punch') {
       const { day, item, index } = action.data;
       handlePunchToggle(day, item, index);
@@ -266,6 +288,38 @@ export default function DashboardScreen({
       Alert.alert('Room Updated', `Room number updated to ${newRoomInput.trim()}`);
     }
     setEditingRoomSlot(null);
+  };
+
+  const handleSaveHolidayOverride = async () => {
+    if (!holidayReasonInput.trim()) {
+      Alert.alert('Specify Reason', 'Please enter a reason or event name (e.g. Annual Sports Day, Mid-Sem Exam).');
+      return;
+    }
+    const todayFormatted = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    const newOverride = {
+      isClosed: true,
+      reason: holidayReasonInput.trim(),
+      type: holidayTypeInput || 'Event',
+      dateStr: todayFormatted,
+    };
+    await saveHolidayOverride(newOverride);
+    setHolidayOverride(newOverride);
+    setEditingHoliday(false);
+
+    // Auto publish to Notice Board as well
+    const autoNotice = `📢 SPECIAL ANNOUNCEMENT: College is CLOSED today (${todayFormatted}) for ${holidayReasonInput.trim()}. Regular class schedule is suspended.`;
+    await saveNotice(autoNotice);
+    setNoticeText(autoNotice);
+
+    Alert.alert('🎉 Holiday / Event Declared', `College status set to CLOSED for: ${holidayReasonInput.trim()}`);
+  };
+
+  const handleClearHolidayOverride = async () => {
+    const resetOverride = { isClosed: false, reason: '', type: 'Event' };
+    await saveHolidayOverride(resetOverride);
+    setHolidayOverride(resetOverride);
+    setEditingHoliday(false);
+    Alert.alert('✅ Classes Resumed', 'College status updated to Normal Open. Daily class timetable is active.');
   };
 
   const todayDayName = getCurrentDayName();
@@ -320,16 +374,16 @@ export default function DashboardScreen({
           {/* Semi-transparent Glass Tint Overlay for legibility */}
           <View style={[styles.videoHeroOverlay, { backgroundColor: isLight ? 'rgba(255, 255, 255, 0.65)' : 'rgba(11, 15, 35, 0.72)' }]} />
 
-          {/* Floating Cards & Elements Inside Video Container */}
-          <View style={{ position: 'relative', zIndex: 2, padding: 14, gap: 12 }}>
+          {/* Hero Content Inside Video Container */}
+          <View style={{ position: 'relative', zIndex: 2, padding: 14, gap: 10 }}>
             {/* Hero Header Content */}
             <View style={styles.heroStripContent}>
               <View style={styles.stripHeaderBadge}>
-                <Ionicons name="sparkles" size={14} color="#818CF8" />
+                <Ionicons name="sparkles" size={13} color="#818CF8" />
                 <Text style={styles.stripBadgeText}>MECHATRONICS DEPT</Text>
               </View>
-              <Text style={[styles.stripTitle, { color: isLight ? '#0F172A' : '#F8FAFC' }]}>Purnea College of Engineering</Text>
-              <Text style={[styles.stripSubtitle, { color: isLight ? '#334155' : '#CBD5E1' }]}>3rd Semester Attendance Portal • BEU Patna</Text>
+              <Text style={[styles.stripTitle, { color: isLight ? '#0F172A' : '#F8FAFC' }]} numberOfLines={1}>Purnea College of Engineering</Text>
+              <Text style={[styles.stripSubtitle, { color: isLight ? '#334155' : '#CBD5E1' }]} numberOfLines={1}>3rd Semester Attendance Portal • BEU Patna</Text>
             </View>
 
             {/* Quick Action Floating CTA Button */}
@@ -340,38 +394,102 @@ export default function DashboardScreen({
             >
               <View style={styles.markCTAContent}>
                 <View style={styles.markCTAIcon}>
-                  <Ionicons name="checkbox" size={24} color="#FFFFFF" />
+                  <Ionicons name="checkbox" size={22} color="#FFFFFF" />
                 </View>
                 <Text style={styles.markCTATitle}>Mark Attendance</Text>
               </View>
 
               <View style={styles.markCTAArrow}>
-                <Ionicons name="arrow-forward" size={18} color="#4F46E5" />
+                <Ionicons name="arrow-forward" size={16} color="#4F46E5" />
               </View>
             </TouchableOpacity>
+          </View>
+        </View>
 
-            {/* 📢 CR Important Notice Board Banner Floating Glass Card */}
-            <View style={[styles.noticeCard, { backgroundColor: isLight ? 'rgba(238, 242, 255, 0.9)' : 'rgba(30, 20, 60, 0.88)', borderColor: isLight ? '#C7D2FE' : '#8B5CF6' }]}>
-              <View style={styles.noticeHeader}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Ionicons name="megaphone" size={18} color={isLight ? '#4F46E5' : '#C084FC'} />
-                  <Text style={[styles.noticeTitle, { color: isLight ? '#3730A3' : '#F8FAFC' }]}>CR Important Announcement</Text>
-                </View>
+        {/* 🎉 College Closed Banner OR 📢 CR Announcement (Clean Single Card View) */}
+        {holidayOverride.isClosed ? (
+          <View style={{
+            backgroundColor: isLight ? 'rgba(254, 242, 242, 0.96)' : 'rgba(70, 20, 20, 0.92)',
+            borderColor: isLight ? '#FCA5A5' : '#EF4444',
+            borderWidth: 1.5,
+            borderRadius: 18,
+            padding: 14,
+            marginBottom: 14,
+            boxShadow: '0 8px 24px rgba(239, 68, 68, 0.2)',
+          }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                <Ionicons name="sparkles" size={18} color="#EF4444" />
+                <Text style={{ fontSize: 12, fontWeight: '900', color: '#EF4444', letterSpacing: 0.5, textTransform: 'uppercase' }} numberOfLines={1}>
+                  COLLEGE CLOSED • {holidayOverride.type || 'SPECIAL EVENT'}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: isLight ? '#FEE2E2' : 'rgba(239, 68, 68, 0.3)',
+                  borderColor: isLight ? '#FCA5A5' : 'rgba(239, 68, 68, 0.6)',
+                  borderWidth: 1,
+                  paddingHorizontal: 10,
+                  paddingVertical: 5,
+                  borderRadius: 10,
+                }}
+                onPress={() => triggerProtectedCRAction({ type: 'declareHoliday' })}
+                activeOpacity={0.8}
+              >
+                <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#991B1B' : '#FCA5A5' }}>Manage</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={{ fontSize: 14, fontWeight: '800', color: isLight ? '#991B1B' : '#FEE2E2', lineHeight: 20 }}>
+              {holidayOverride.reason}
+            </Text>
+            <Text style={{ fontSize: 11, fontWeight: '600', color: isLight ? '#B91C1C' : '#FCA5A5', marginTop: 4 }}>
+              Regular classes & labs suspended ({holidayOverride.dateStr || 'Today'})
+            </Text>
+          </View>
+        ) : (
+          <View style={[styles.noticeCard, { backgroundColor: isLight ? 'rgba(238, 242, 255, 0.9)' : 'rgba(30, 20, 60, 0.88)', borderColor: isLight ? '#C7D2FE' : '#8B5CF6', marginBottom: 14 }]}>
+            <View style={styles.noticeHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                <Ionicons name="megaphone" size={17} color={isLight ? '#4F46E5' : '#C084FC'} />
+                <Text style={[styles.noticeTitle, { color: isLight ? '#3730A3' : '#F8FAFC' }]} numberOfLines={1}>CR Announcement</Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <TouchableOpacity
+                  style={[
+                    styles.crEditIconBtn,
+                    {
+                      backgroundColor: isLight ? '#FEF3C7' : 'rgba(245, 158, 11, 0.2)',
+                      borderColor: isLight ? '#FDE68A' : 'rgba(245, 158, 11, 0.4)',
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
+                      borderRadius: 10,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 4,
+                    }
+                  ]}
+                  onPress={() => triggerProtectedCRAction({ type: 'declareHoliday' })}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="calendar-outline" size={13} color={isLight ? '#D97706' : '#FBBF24'} />
+                  <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#B45309' : '#FBBF24' }}>Declare Event</Text>
+                </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.crEditIconBtn, { backgroundColor: isLight ? '#E0E7FF' : 'rgba(168, 85, 247, 0.2)', borderColor: isLight ? '#C7D2FE' : 'rgba(168, 85, 247, 0.4)' }]}
                   onPress={() => triggerProtectedCRAction({ type: 'editNotice' })}
                   activeOpacity={0.7}
                   title="Edit Notice"
                 >
-                  <Ionicons name="pencil" size={14} color={isLight ? '#4F46E5' : '#C084FC'} />
+                  <Ionicons name="pencil" size={13} color={isLight ? '#4F46E5' : '#C084FC'} />
                 </TouchableOpacity>
               </View>
-              <Text style={[styles.noticeContentText, { color: isLight ? '#312E81' : '#E9D5FF' }]}>
-                {noticeText}
-              </Text>
             </View>
+            <Text style={[styles.noticeContentText, { color: isLight ? '#312E81' : '#E9D5FF' }]}>
+              {noticeText}
+            </Text>
           </View>
-        </View>
+        )}
 
         {/* 🏫 Classes Going On / Today's & Weekly Routine Schedule Card */}
         <View style={[styles.routineCard, { backgroundColor: colors.bgCard, borderColor: colors.glassBorder, boxShadow: colors.cardShadow }]}>
@@ -811,6 +929,120 @@ export default function DashboardScreen({
                 onPress={handleSaveRoomNumber}
               >
                 <Text style={{ color: '#FFFFFF', fontWeight: '800' }}>Update Room</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal 3: Declare College Closed / Event Day Modal */}
+      <Modal visible={editingHoliday} transparent animationType="slide" onRequestClose={() => setEditingHoliday(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.65)', justifyContent: 'center', alignItems: 'center', padding: 18 }}>
+          <View style={{ width: '100%', maxWidth: 460, backgroundColor: colors.bgGlassElevated, borderColor: colors.glassBorder, borderWidth: 1, borderRadius: 24, padding: 22 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="sparkles" size={22} color="#EF4444" />
+                <Text style={{ fontSize: 17, fontWeight: '800', color: colors.textMain }}>College Event / Holiday Status</Text>
+              </View>
+              <TouchableOpacity onPress={() => setEditingHoliday(false)}>
+                <Ionicons name="close" size={22} color={colors.textSub} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={{ fontSize: 13, color: colors.textSub, marginBottom: 14 }}>
+              Declare college closed for today due to a special event, fest, exam, or official holiday. This will update the portal banner and suspend regular live attendance.
+            </Text>
+
+            {/* Quick Event Preset Pills */}
+            <Text style={{ fontSize: 12, fontWeight: '800', color: colors.textMain, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Select Event Preset:
+            </Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+              {[
+                { label: '🏆 Annual College Fest / Sports Day', type: 'Fest' },
+                { label: '🚀 Hackathon & Seminar Day', type: 'Seminar' },
+                { label: '📝 BEU Mid-Sem Examination', type: 'Exam' },
+                { label: '🇮🇳 National Holiday / Festival', type: 'Holiday' },
+                { label: '🚨 Emergency Weather / Heavy Rain', type: 'Emergency' },
+                { label: '🧹 Department Off Day', type: 'Off-Day' },
+              ].map((preset) => {
+                const isSelected = holidayReasonInput === preset.label;
+                return (
+                  <TouchableOpacity
+                    key={preset.type}
+                    onPress={() => {
+                      setHolidayReasonInput(preset.label);
+                      setHolidayTypeInput(preset.type);
+                    }}
+                    style={{
+                      paddingHorizontal: 10,
+                      paddingVertical: 6,
+                      borderRadius: 14,
+                      backgroundColor: isSelected ? (isLight ? '#FEE2E2' : 'rgba(239, 68, 68, 0.25)') : colors.bgGlass,
+                      borderColor: isSelected ? '#EF4444' : colors.glassBorder,
+                      borderWidth: 1,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, fontWeight: isSelected ? '800' : '600', color: isSelected ? '#EF4444' : colors.textMain }}>
+                      {preset.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Custom Reason TextInput */}
+            <Text style={{ fontSize: 12, fontWeight: '800', color: colors.textMain, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Custom Event Reason / Announcement:
+            </Text>
+            <TextInput
+              style={{
+                backgroundColor: colors.bgGlass,
+                borderColor: colors.glassBorder,
+                borderWidth: 1,
+                borderRadius: 12,
+                padding: 12,
+                color: colors.textMain,
+                fontSize: 14,
+                fontWeight: '600',
+                minHeight: 70,
+                textAlignVertical: 'top',
+                marginBottom: 18,
+              }}
+              multiline
+              value={holidayReasonInput}
+              onChangeText={setHolidayReasonInput}
+              placeholder="e.g. Annual College Sports Meet 2026 - All classes suspended"
+              placeholderTextColor={colors.textMuted}
+            />
+
+            {/* Action Buttons */}
+            <View style={{ flexDirection: 'column', gap: 10 }}>
+              <TouchableOpacity
+                style={{ paddingVertical: 12, borderRadius: 12, backgroundColor: '#EF4444', alignItems: 'center' }}
+                onPress={handleSaveHolidayOverride}
+              >
+                <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 14 }}>
+                  🎉 Declare College Closed Today
+                </Text>
+              </TouchableOpacity>
+
+              {holidayOverride.isClosed && (
+                <TouchableOpacity
+                  style={{ paddingVertical: 12, borderRadius: 12, backgroundColor: colors.bgGlass, borderColor: '#10B981', borderWidth: 1.5, alignItems: 'center' }}
+                  onPress={handleClearHolidayOverride}
+                >
+                  <Text style={{ color: '#10B981', fontWeight: '800', fontSize: 14 }}>
+                    ✅ Clear Holiday & Resume Normal Classes
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity
+                style={{ paddingVertical: 10, alignItems: 'center' }}
+                onPress={() => setEditingHoliday(false)}
+              >
+                <Text style={{ color: colors.textSub, fontWeight: '600', fontSize: 13 }}>Cancel</Text>
               </TouchableOpacity>
             </View>
           </View>

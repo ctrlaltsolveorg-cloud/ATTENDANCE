@@ -8,8 +8,9 @@ const KEYS = {
   SUBJECTS: '@pce_attendance_subjects',
   ATTENDANCE: '@pce_attendance_records',
   NOTICE: '@pce_attendance_notice',
-  ROUTINE: '@pce_attendance_routine_v10',
+  ROUTINE: '@pce_attendance_routine_v11',
   LIVE_PUNCHES: '@pce_attendance_live_punches_v1',
+  HOLIDAY_OVERRIDE: '@pce_attendance_holiday_override_v1',
 };
 
 export const DEFAULT_NOTICE = "📢 Today's Announcement: SOM class will be held in Room 115 for Hackathon Seminar orientation.";
@@ -53,7 +54,7 @@ export const DEFAULT_WEEKLY_ROUTINE = {
   ],
   Friday: [
     { period: 'I', time: '10:00 AM - 10:50 AM', code: 'EM', name: 'Eng. Mechanics (L)', faculty: 'Ravi Anand (RA)', room: '202' },
-    { period: 'II', time: '10:50 AM - 11:40 AM', code: 'BM', name: 'Basic Mechatronics (L)', faculty: 'Dheeraj Kumar (DK)', room: '123' },
+    { period: 'II', time: '10:50 AM - 11:40 AM', code: 'IKS', name: 'Indian Knowledge System (L)', faculty: 'Uday Kr. Singh (UKS)', room: '202' },
     { period: 'III', time: '11:40 AM - 12:30 PM', code: 'SPOKEN', name: 'Spoken Tutorial Session', faculty: 'Dept Faculty', room: 'Language Lab' },
     { period: 'IV', time: '12:30 PM - 01:20 PM', code: 'SPOKEN', name: 'Spoken Tutorial Session', faculty: 'Dept Faculty', room: 'Language Lab' },
     { period: 'RECESS', time: '01:20 PM - 02:00 PM', code: 'RECESS', name: 'Lunch Break / Recess', faculty: '-', room: 'Recess' },
@@ -63,7 +64,7 @@ export const DEFAULT_WEEKLY_ROUTINE = {
   Saturday: [
     { period: 'I', time: '10:00 AM - 10:50 AM', code: 'FM&M', name: 'Fluid Mechanics & Machinery (L)', faculty: 'Ramchandra Sahani (RC Sahani)', room: '123' },
     { period: 'II', time: '10:50 AM - 11:40 AM', code: 'SOM', name: 'Strength of Material (L)', faculty: 'Payal Priya (PP)', room: '123' },
-    { period: 'III', time: '11:40 AM - 12:30 PM', code: 'IKS', name: 'Indian Knowledge System (L)', faculty: 'Uday Kr. Singh (UKS)', room: '202' },
+    { period: 'III', time: '11:40 AM - 12:30 PM', code: 'BM', name: 'Basic Mechatronics (L)', faculty: 'Dheeraj Kumar (DK)', room: '123' },
     { period: 'IV', time: '12:30 PM - 01:20 PM', code: 'LIBRARY', name: 'Library / Self Study', faculty: 'Library Incharge', room: 'Central Library' },
     { period: 'RECESS', time: '01:20 PM - 02:00 PM', code: 'RECESS', name: 'Lunch Break / Recess', faculty: '-', room: 'Recess' },
     { period: 'V', time: '02:00 PM - 04:00 PM', code: 'SOM LAB', name: 'Strength of Material Lab (161305P)', faculty: 'Payal Priya / Asif Ansari', room: 'SOM Lab' },
@@ -114,13 +115,46 @@ export const getBranchInfo = async () => {
   }
 };
 
+const withTimeout = (promise, ms = 1000) => {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error('Supabase timeout'));
+    }, ms);
+    promise
+      .then((res) => {
+        clearTimeout(timer);
+        resolve(res);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+  });
+};
+
 export const getStudents = async () => {
+  let localStudents = null;
+  try {
+    const data = await AsyncStorage.getItem(KEYS.STUDENTS);
+    if (data) {
+      const parsed = JSON.parse(data);
+      if (
+        parsed &&
+        parsed.length === 19 &&
+        parsed[0]?.regNo === '25161131001' &&
+        parsed[1]?.regNo === '25161131002'
+      ) {
+        localStudents = parsed;
+      }
+    }
+  } catch (e) {}
+
   try {
     const supabase = getSupabaseClient();
-    const { data: remoteStudents, error } = await supabase
-      .from('students')
-      .select('*')
-      .order('roll_int', { ascending: true });
+    const { data: remoteStudents, error } = await withTimeout(
+      supabase.from('students').select('*').order('roll_int', { ascending: true }),
+      1000
+    );
 
     if (
       !error &&
@@ -146,23 +180,10 @@ export const getStudents = async () => {
       return mapped;
     }
   } catch (e) {
-    // Supabase offline fallback
+    // Supabase timeout or offline
   }
 
-  try {
-    const data = await AsyncStorage.getItem(KEYS.STUDENTS);
-    if (data) {
-      const parsed = JSON.parse(data);
-      if (
-        parsed &&
-        parsed.length === 19 &&
-        parsed[0]?.regNo === '25161131001' &&
-        parsed[1]?.regNo === '25161131002'
-      ) {
-        return parsed;
-      }
-    }
-  } catch (e) {}
+  if (localStudents) return localStudents;
 
   await AsyncStorage.setItem(KEYS.STUDENTS, JSON.stringify(DEFAULT_STUDENTS));
   return DEFAULT_STUDENTS;
@@ -189,18 +210,27 @@ export const saveStudents = async (students) => {
       branch: s.branch || 'Mechatronics',
       semester: s.semester || '3rd',
     }));
-    await supabase.from('students').upsert(rows);
+    await withTimeout(supabase.from('students').upsert(rows), 1500);
   } catch (e) {
     // Supabase sync fallback
   }
 };
 
 export const getSubjects = async () => {
+  let localSubjects = null;
+  try {
+    const data = await AsyncStorage.getItem(KEYS.SUBJECTS);
+    if (data) {
+      localSubjects = JSON.parse(data);
+    }
+  } catch (e) {}
+
   try {
     const supabase = getSupabaseClient();
-    const { data: remoteSubjects, error } = await supabase
-      .from('subjects')
-      .select('*');
+    const { data: remoteSubjects, error } = await withTimeout(
+      supabase.from('subjects').select('*'),
+      1000
+    );
 
     if (!error && remoteSubjects && remoteSubjects.length > 0) {
       const mapped = remoteSubjects.map((s) => ({
@@ -216,15 +246,13 @@ export const getSubjects = async () => {
       return mapped;
     }
   } catch (e) {
-    // Fallback
+    // Timeout
   }
 
-  try {
-    const data = await AsyncStorage.getItem(KEYS.SUBJECTS);
-    return data ? JSON.parse(data) : DEFAULT_SUBJECTS;
-  } catch (e) {
-    return DEFAULT_SUBJECTS;
-  }
+  if (localSubjects) return localSubjects;
+
+  await AsyncStorage.setItem(KEYS.SUBJECTS, JSON.stringify(DEFAULT_SUBJECTS));
+  return DEFAULT_SUBJECTS;
 };
 
 export const saveSubjects = async (subjects) => {
@@ -236,12 +264,20 @@ export const saveSubjects = async (subjects) => {
 };
 
 export const getAttendanceRecords = async () => {
+  let localRecords = null;
+  try {
+    const data = await AsyncStorage.getItem(KEYS.ATTENDANCE);
+    if (data) {
+      localRecords = JSON.parse(data);
+    }
+  } catch (e) {}
+
   try {
     const supabase = getSupabaseClient();
-    const { data: remoteRecords, error } = await supabase
-      .from('attendance_records')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const { data: remoteRecords, error } = await withTimeout(
+      supabase.from('attendance_records').select('*').order('created_at', { ascending: false }),
+      1000
+    );
 
     if (!error && remoteRecords) {
       const mapped = remoteRecords.map((r) => {
@@ -277,12 +313,9 @@ export const getAttendanceRecords = async () => {
     // Offline fallback
   }
 
-  try {
-    const data = await AsyncStorage.getItem(KEYS.ATTENDANCE);
-    return data ? JSON.parse(data) : [];
-  } catch (e) {
-    return [];
-  }
+  if (localRecords) return localRecords;
+
+  return [];
 };
 
 /**
@@ -865,5 +898,22 @@ export const saveLivePunches = async (punchesObj) => {
     await AsyncStorage.setItem(KEYS.LIVE_PUNCHES, JSON.stringify(punchesObj));
   } catch (e) {
     console.error('Error saving live punches:', e);
+  }
+};
+
+export const getHolidayOverride = async () => {
+  try {
+    const data = await AsyncStorage.getItem(KEYS.HOLIDAY_OVERRIDE);
+    return data ? JSON.parse(data) : { isClosed: false, reason: '', type: 'Event' };
+  } catch (e) {
+    return { isClosed: false, reason: '', type: 'Event' };
+  }
+};
+
+export const saveHolidayOverride = async (overrideObj) => {
+  try {
+    await AsyncStorage.setItem(KEYS.HOLIDAY_OVERRIDE, JSON.stringify(overrideObj));
+  } catch (e) {
+    console.error('Error saving holiday override:', e);
   }
 };
