@@ -9,8 +9,9 @@ import {
   Modal,
   Alert,
   Platform,
+  Image,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { getTheme } from '../theme/theme';
 import Header from '../components/Header';
 import PasswordModal from '../components/PasswordModal';
@@ -98,6 +99,156 @@ const getPeriodStatus = (timeStr) => {
   }
 };
 
+const formatMinToTimeStr = (totalMins) => {
+  const hours = Math.floor(totalMins / 60);
+  const mins = totalMins % 60;
+  const isPM = hours >= 12;
+  const h12 = hours % 12 || 12;
+  return `${h12}:${mins < 10 ? '0' : ''}${mins} ${isPM ? 'PM' : 'AM'}`;
+};
+
+const getTimelineSegments = (timeStr, punch = {}, isToday = true) => {
+  try {
+    const timeParts = timeStr.split('-');
+    if (timeParts.length !== 2) {
+      return { segments: [], popups: [], totalFilledPct: 0, yellowMins: 0, greenMins: 0, minsRemaining: 0, isOngoing: false };
+    }
+
+    const schedStartMin = parseTimeStringToMinutes(timeParts[0]);
+    const schedEndMin = parseTimeStringToMinutes(timeParts[1]);
+    const totalDuration = Math.max(1, schedEndMin - schedStartMin);
+
+    const nowInfo = getNowTimeInfo();
+    const nowMins = isToday ? nowInfo.totalMins : (schedEndMin + 60);
+
+    const effNow = Math.max(schedStartMin, Math.min(schedEndMin, nowMins));
+    const elapsedMins = Math.max(0, effNow - schedStartMin);
+    const minsRemaining = Math.max(0, schedEndMin - nowMins);
+    const isOngoing = isToday && nowMins >= schedStartMin && nowMins < schedEndMin;
+
+    if (elapsedMins === 0) {
+      return {
+        segments: [],
+        popups: [],
+        totalFilledPct: 0,
+        yellowMins: 0,
+        greenMins: 0,
+        minsRemaining,
+        isOngoing,
+      };
+    }
+
+    let intervals = Array.isArray(punch.intervals) ? [...punch.intervals] : [];
+
+    // Fallback for legacy single-interval punch format
+    if (intervals.length === 0 && (punch.status === 'IN_CLASS' || punch.status === 'PAUSED' || punch.status === 'ENDED')) {
+      const sMin = punch.startMins || schedStartMin;
+      const eMin = punch.endMins || (punch.status === 'IN_CLASS' ? null : schedEndMin);
+      intervals = [{ startMins: sMin, endMins: eMin, startTime: punch.startTime, endTime: punch.endTime }];
+    }
+
+    const minuteColors = [];
+    for (let m = schedStartMin; m < effNow; m++) {
+      let isTeacherIn = false;
+      for (const intv of intervals) {
+        const intvStart = Math.max(schedStartMin, intv.startMins || schedStartMin);
+        const intvEnd = intv.endMins !== null && intv.endMins !== undefined
+          ? Math.min(schedEndMin, intv.endMins)
+          : effNow;
+
+        if (m >= intvStart && m < intvEnd) {
+          isTeacherIn = true;
+          break;
+        }
+      }
+      minuteColors.push(isTeacherIn ? '#F59E0B' : '#10B981');
+    }
+
+    const segments = [];
+    const popups = [];
+    let yellowCount = 0;
+    let greenCount = 0;
+
+    if (minuteColors.length > 0) {
+      let curColor = minuteColors[0];
+      let curMins = 0;
+      let segStartMin = schedStartMin;
+      let cumPct = 0;
+
+      for (let i = 0; i < minuteColors.length; i++) {
+        const c = minuteColors[i];
+        if (c === '#F59E0B') yellowCount++;
+        else greenCount++;
+
+        if (c === curColor) {
+          curMins++;
+        } else {
+          const widthPct = (curMins / totalDuration) * 100;
+          segments.push({
+            color: curColor,
+            durationMins: curMins,
+            widthPct,
+            startMins: segStartMin,
+            startPct: cumPct,
+          });
+
+          // Add popup for transition point between colors
+          const transitionTimeMin = schedStartMin + i;
+          const displayTime = punch.startTime && Math.abs(transitionTimeMin - (punch.startMins || 0)) <= 2
+            ? punch.startTime
+            : formatMinToTimeStr(transitionTimeMin);
+
+          popups.push({
+            timeStr: displayTime,
+            leftPct: cumPct + widthPct,
+            color: c,
+            type: c === '#F59E0B' ? 'IN' : 'OUT',
+          });
+
+          cumPct += widthPct;
+          curColor = c;
+          curMins = 1;
+          segStartMin = schedStartMin + i;
+        }
+      }
+
+      const widthPct = (curMins / totalDuration) * 100;
+      segments.push({
+        color: curColor,
+        durationMins: curMins,
+        widthPct,
+        startMins: segStartMin,
+        startPct: cumPct,
+      });
+
+      // If first segment is Yellow, add initial entry popup
+      if (segments[0].color === '#F59E0B') {
+        popups.unshift({
+          timeStr: punch.startTime || formatMinToTimeStr(segments[0].startMins),
+          leftPct: segments[0].startPct,
+          color: '#F59E0B',
+          type: 'IN',
+        });
+      }
+    }
+
+    const totalFilledPct = Math.min(100, Math.round((elapsedMins / totalDuration) * 100));
+
+    return {
+      segments,
+      popups,
+      totalFilledPct,
+      yellowMins: yellowCount,
+      greenMins: greenCount,
+      elapsedMins,
+      minsRemaining,
+      isOngoing,
+    };
+  } catch (e) {
+    return { segments: [], popups: [], totalFilledPct: 0, yellowMins: 0, greenMins: 0, minsRemaining: 0, isOngoing: false };
+  }
+};
+
 export default function DashboardScreen({
   branchInfo,
   students,
@@ -174,48 +325,75 @@ export default function DashboardScreen({
 
     const slotKey = `${day}_${item.period}_${index}`;
     const nowInfo = getNowTimeInfo();
-    const currentPunch = livePunches[slotKey] || { status: 'NOT_STARTED' };
+    const currentPunch = livePunches[slotKey] || { status: 'NOT_STARTED', intervals: [] };
 
     const timeParts = item.time.split('-');
     const schedStartMin = timeParts.length === 2 ? parseTimeStringToMinutes(timeParts[0]) : nowInfo.totalMins;
     const schedEndMin = timeParts.length === 2 ? parseTimeStringToMinutes(timeParts[1]) : nowInfo.totalMins;
 
+    let intervals = Array.isArray(currentPunch.intervals) ? [...currentPunch.intervals] : [];
+
+    // Fallback for legacy single-interval format
+    if (intervals.length === 0 && (currentPunch.status === 'IN_CLASS' || currentPunch.status === 'PAUSED' || currentPunch.status === 'ENDED')) {
+      const sMin = currentPunch.startMins || schedStartMin;
+      const eMin = currentPunch.endMins || (currentPunch.status === 'IN_CLASS' ? null : schedEndMin);
+      intervals = [{ startMins: sMin, endMins: eMin, startTime: currentPunch.startTime, endTime: currentPunch.endTime }];
+    }
+
     let updatedPunch = {};
 
-    if (currentPunch.status === 'NOT_STARTED' || !currentPunch.status) {
-      // 🟢 PUNCH IN: Teacher Came
-      const lateMins = Math.max(0, nowInfo.totalMins - schedStartMin);
-      updatedPunch = {
-        status: 'IN_CLASS',
-        startTime: nowInfo.timeStr,
-        startMins: nowInfo.totalMins,
-        startedAtMs: nowInfo.timestamp,
-        lateMins,
-      };
-      Alert.alert(
-        '🟢 Teacher Arrived',
-        `Teacher arrived & started class at ${nowInfo.timeStr}${lateMins > 0 ? ` (${lateMins} mins late)` : ' (On Time!)'}\nTimeline is now LIVE GREEN!`
-      );
-    } else if (currentPunch.status === 'IN_CLASS') {
-      // 🔴 PUNCH OUT: Teacher Left
-      const earlyMins = Math.max(0, schedEndMin - nowInfo.totalMins);
-      const durationMins = Math.max(1, nowInfo.totalMins - (currentPunch.startMins || schedStartMin));
+    if (currentPunch.status === 'IN_CLASS') {
+      // 🟢 PAUSE CLASS: Teacher Left / Out of Class -> Timeline turns GREEN
+      if (intervals.length > 0 && (intervals[intervals.length - 1].endMins === null || intervals[intervals.length - 1].endMins === undefined)) {
+        intervals[intervals.length - 1] = {
+          ...intervals[intervals.length - 1],
+          endMins: nowInfo.totalMins,
+          endTime: nowInfo.timeStr,
+        };
+      }
+      const totalYellowMins = intervals.reduce((acc, intv) => acc + Math.max(0, (intv.endMins || nowInfo.totalMins) - intv.startMins), 0);
+
       updatedPunch = {
         ...currentPunch,
-        status: 'ENDED',
+        status: 'PAUSED',
         endTime: nowInfo.timeStr,
         endMins: nowInfo.totalMins,
         endedAtMs: nowInfo.timestamp,
-        earlyMins,
-        durationMins,
+        intervals,
+        yellowMins: totalYellowMins,
       };
+
       Alert.alert(
-        '🏁 Teacher Left',
-        `Teacher left class at ${nowInfo.timeStr}.\nActual Duration Held: ${durationMins} mins${earlyMins > 0 ? ` (${earlyMins} mins early)` : ' (Full session held)'}`
+        '🟢 Teacher Out of Classroom',
+        `Teacher left classroom at ${nowInfo.timeStr}.\nTimeline is running in GREEN while teacher is out!`
+      );
+    } else if (currentPunch.status === 'NOT_STARTED' || currentPunch.status === 'PAUSED' || !currentPunch.status) {
+      // 🟡 START / RESUME CLASS: Teacher Came / In Class -> Timeline turns YELLOW
+      const lateMins = currentPunch.startTime ? currentPunch.lateMins : Math.max(0, nowInfo.totalMins - schedStartMin);
+      intervals.push({
+        startMins: nowInfo.totalMins,
+        endMins: null,
+        startTime: nowInfo.timeStr,
+      });
+
+      updatedPunch = {
+        ...currentPunch,
+        status: 'IN_CLASS',
+        startTime: currentPunch.startTime || nowInfo.timeStr,
+        startMins: currentPunch.startMins || nowInfo.totalMins,
+        startedAtMs: currentPunch.startedAtMs || nowInfo.timestamp,
+        lateMins,
+        intervals,
+      };
+
+      Alert.alert(
+        '🟡 Teacher Entered Classroom',
+        `Teacher entered class at ${nowInfo.timeStr}${lateMins > 0 ? ` (${lateMins} mins late)` : ' (On Time!)'}\nTimeline is now running in YELLOW!`
       );
     } else {
-      // Reset Punch
-      updatedPunch = { status: 'NOT_STARTED' };
+      // RESET PUNCH
+      updatedPunch = { status: 'NOT_STARTED', intervals: [] };
+      Alert.alert('🔄 Session Reset', 'Attendance timeline session has been reset.');
     }
 
     const updatedMap = {
@@ -448,44 +626,53 @@ export default function DashboardScreen({
             </Text>
           </View>
         ) : (
-          <View style={[styles.noticeCard, { backgroundColor: isLight ? 'rgba(238, 242, 255, 0.9)' : 'rgba(30, 20, 60, 0.88)', borderColor: isLight ? '#C7D2FE' : '#8B5CF6', marginBottom: 14 }]}>
+          <View style={[styles.noticeCard, { backgroundColor: isLight ? 'rgba(238, 242, 255, 0.9)' : 'rgba(19, 27, 46, 0.92)', borderColor: isLight ? '#C7D2FE' : '#334155', marginBottom: 14 }]}>
             <View style={styles.noticeHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-                <Ionicons name="megaphone" size={17} color={isLight ? '#4F46E5' : '#C084FC'} />
+                <Ionicons name="megaphone" size={17} color={isLight ? '#4F46E5' : '#38BDF8'} />
                 <Text style={[styles.noticeTitle, { color: isLight ? '#3730A3' : '#F8FAFC' }]} numberOfLines={1}>CR Announcement</Text>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <TouchableOpacity
-                  style={[
-                    styles.crEditIconBtn,
-                    {
-                      backgroundColor: isLight ? '#FEF3C7' : 'rgba(245, 158, 11, 0.2)',
-                      borderColor: isLight ? '#FDE68A' : 'rgba(245, 158, 11, 0.4)',
-                      paddingHorizontal: 8,
-                      paddingVertical: 4,
-                      borderRadius: 10,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 4,
-                    }
-                  ]}
+                  style={{
+                    backgroundColor: isLight ? '#FEF3C7' : 'rgba(245, 158, 11, 0.2)',
+                    borderColor: isLight ? '#FDE68A' : 'rgba(245, 158, 11, 0.4)',
+                    borderWidth: 1,
+                    paddingHorizontal: 9,
+                    height: 28,
+                    borderRadius: 14,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 4,
+                  }}
                   onPress={() => triggerProtectedCRAction({ type: 'declareHoliday' })}
                   activeOpacity={0.7}
+                  title="Declare Special Event"
                 >
                   <Ionicons name="calendar-outline" size={13} color={isLight ? '#D97706' : '#FBBF24'} />
-                  <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#B45309' : '#FBBF24' }}>Declare Event</Text>
+                  <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#B45309' : '#FBBF24', whiteSpace: 'nowrap' }}>Declare Event</Text>
                 </TouchableOpacity>
+
                 <TouchableOpacity
-                  style={[styles.crEditIconBtn, { backgroundColor: isLight ? '#E0E7FF' : 'rgba(168, 85, 247, 0.2)', borderColor: isLight ? '#C7D2FE' : 'rgba(168, 85, 247, 0.4)' }]}
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 14,
+                    backgroundColor: isLight ? '#E0E7FF' : 'rgba(30, 41, 59, 0.8)',
+                    borderColor: isLight ? '#C7D2FE' : 'rgba(56, 189, 248, 0.4)',
+                    borderWidth: 1,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
                   onPress={() => triggerProtectedCRAction({ type: 'editNotice' })}
                   activeOpacity={0.7}
                   title="Edit Notice"
                 >
-                  <Ionicons name="pencil" size={13} color={isLight ? '#4F46E5' : '#C084FC'} />
+                  <Ionicons name="pencil" size={13} color={isLight ? '#4F46E5' : '#38BDF8'} />
                 </TouchableOpacity>
               </View>
             </View>
-            <Text style={[styles.noticeContentText, { color: isLight ? '#312E81' : '#E9D5FF' }]}>
+            <Text style={[styles.noticeContentText, { color: isLight ? '#312E81' : '#CBD5E1' }]}>
               {noticeText}
             </Text>
           </View>
@@ -549,30 +736,42 @@ export default function DashboardScreen({
               const slotKey = `${selectedDay}_${item.period}_${index}`;
               const punch = livePunches[slotKey] || { status: 'NOT_STARTED' };
               const isPunchIn = punch.status === 'IN_CLASS';
+              const isPunchPaused = punch.status === 'PAUSED';
               const isPunchEnded = punch.status === 'ENDED';
 
               const status = selectedDay === todayDayName ? getPeriodStatus(item.time) : { isOngoing: false, isCompleted: false, pct: 0, minsRemaining: 0 };
+              const timelineData = getTimelineSegments(item.time, punch, selectedDay === todayDayName);
+
+              const isClassCompleted = status.isCompleted || isPunchEnded;
 
               // Determine row background & border colors based on live punch status
-              let rowBg = isPunchIn
-                ? (isLight ? '#ECFDF5' : 'rgba(6, 78, 59, 0.45)')
-                : isPunchEnded
-                ? (isLight ? '#F8FAFC' : 'rgba(15, 23, 42, 0.4)')
+              let rowBg = isClassCompleted
+                ? (isLight ? '#F8FAFC' : 'rgba(15, 23, 42, 0.45)') // Muted Gray div when class completed
+                : isPunchIn
+                ? (isLight ? '#FFFBEB' : 'rgba(180, 83, 9, 0.22)') // Yellow tint when Teacher in class
+                : isPunchPaused
+                ? (isLight ? '#ECFDF5' : 'rgba(6, 78, 59, 0.35)') // Green tint when Teacher out
                 : status.isOngoing
                 ? (isLight ? '#ECFDF5' : 'rgba(6, 78, 59, 0.35)')
-                : status.isCompleted
-                ? (isLight ? '#F8FAFC' : 'rgba(15, 23, 42, 0.3)')
                 : colors.bgGlass;
 
-              let rowBorder = isPunchIn
-                ? '#10B981'
-                : isPunchEnded
-                ? (isLight ? '#CBD5E1' : '#334155')
+              let rowBorder = isClassCompleted
+                ? (isLight ? '#CBD5E1' : '#334155') // Gray border when done
+                : isPunchIn
+                ? '#F59E0B' // Yellow border for Teacher in Class
+                : isPunchPaused
+                ? '#10B981' // Green border for Teacher out
                 : status.isOngoing
                 ? '#10B981'
-                : status.isCompleted
-                ? (isLight ? '#E2E8F0' : '#1E293B')
                 : colors.glassBorder;
+
+              let borderLeftColor = isClassCompleted
+                ? (isLight ? '#94A3B8' : '#475569') // Gray left border accent when done
+                : isPunchIn
+                ? '#F59E0B'
+                : isPunchPaused
+                ? '#10B981'
+                : rowBorder;
 
               return (
                 <View
@@ -582,133 +781,204 @@ export default function DashboardScreen({
                     {
                       backgroundColor: rowBg,
                       borderColor: rowBorder,
-                      borderLeftWidth: isPunchIn ? 5 : isPunchEnded ? 4 : 1,
-                      borderLeftColor: isPunchIn ? '#10B981' : isPunchEnded ? '#6366F1' : rowBorder,
+                      borderLeftWidth: isPunchIn || isPunchPaused ? 5 : isClassCompleted ? 4 : 1,
+                      borderLeftColor: borderLeftColor,
+                      flexDirection: 'column',
                     },
                   ]}
                 >
-                  <View style={{ flex: 1 }}>
-                    {/* Header Row: Period Badge, Scheduled Time, Live / Punch Status Pills */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 6 }}>
-                      <View style={[styles.periodBadge, { backgroundColor: isLight ? '#EEF2FF' : 'rgba(15, 23, 42, 0.8)' }]}>
-                        <Text style={[styles.periodBadgeText, { color: colors.primary }]}>P-{item.period}</Text>
-                      </View>
-                      <Text style={[styles.periodTime, { color: colors.textSub }]}>{item.time}</Text>
+                  {/* Top Row: Info (Left) & Controls (Right) */}
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%' }}>
+                    {/* Left Info: Period Badge, Scheduled Time, Live Status, Subject, Faculty */}
+                    <View style={{ flex: 1, paddingRight: 8 }}>
+                      {/* Header Badges */}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 4 }}>
+                        <View style={[styles.periodBadge, { backgroundColor: isLight ? '#EEF2FF' : 'rgba(15, 23, 42, 0.8)' }]}>
+                          <Text style={[styles.periodBadgeText, { color: colors.primary }]}>P-{item.period}</Text>
+                        </View>
+                        <Text style={[styles.periodTime, { color: colors.textSub }]}>{item.time}</Text>
 
-                      {/* Live Punch Status Badges */}
-                      {isPunchIn ? (
-                        <View style={[styles.livePill, { backgroundColor: '#10B981' }]}>
-                          <View style={styles.liveDot} />
-                          <Text style={[styles.liveText, { color: '#FFFFFF' }]}>
-                            IN CLASS ({punch.startTime})
+                        {/* Live Punch Status & Completed Badges */}
+                        {isClassCompleted ? (
+                          <View style={[styles.livePill, { backgroundColor: isLight ? '#F1F5F9' : 'rgba(100, 116, 139, 0.2)', borderColor: isLight ? '#CBD5E1' : '#475569', borderWidth: 1 }]}>
+                            <Ionicons name="checkmark-circle" size={11} color={isLight ? '#475569' : '#94A3B8'} />
+                            <Text style={[styles.liveText, { color: isLight ? '#475569' : '#94A3B8', fontWeight: '800' }]}>
+                              DONE
+                            </Text>
+                          </View>
+                        ) : isPunchIn ? (
+                          <View style={[styles.livePill, { backgroundColor: '#F59E0B' }]}>
+                            <View style={[styles.liveDot, { backgroundColor: '#FFFFFF' }]} />
+                            <Text style={[styles.liveText, { color: '#FFFFFF', fontWeight: '800' }]}>
+                              TEACHER IN CLASS ({punch.startTime})
+                            </Text>
+                          </View>
+                        ) : isPunchPaused ? (
+                          <View style={[styles.livePill, { backgroundColor: '#10B981' }]}>
+                            <View style={styles.liveDot} />
+                            <Text style={[styles.liveText, { color: '#FFFFFF', fontWeight: '800' }]}>
+                              TEACHER OUT
+                            </Text>
+                          </View>
+                        ) : status.isOngoing ? (
+                          <View style={styles.livePill}>
+                            <View style={styles.liveDot} />
+                            <Text style={styles.liveText}>LIVE {timelineData.totalFilledPct}%</Text>
+                          </View>
+                        ) : null}
+                      </View>
+
+                      {/* Subject & Teacher Name */}
+                      <View style={{ marginTop: 2 }}>
+                        <Text style={[styles.periodSubject, { color: isClassCompleted ? (isLight ? '#64748B' : '#94A3B8') : colors.textMain, fontSize: 15, fontWeight: '700' }]}>
+                          {item.code}
+                        </Text>
+                        {item.faculty && item.faculty !== '-' ? (
+                          <Text style={{ fontSize: 12, fontWeight: '500', color: isLight ? '#64748B' : '#94A3B8', marginTop: 2, opacity: 0.85 }}>
+                            {item.faculty.replace(/\b(Prof\.|Dr\.|Prof|Dr)\b\s*/gi, '').trim()}
                           </Text>
-                        </View>
-                      ) : isPunchEnded ? (
-                        <View style={[styles.livePill, { backgroundColor: isLight ? '#E0E7FF' : 'rgba(99, 102, 241, 0.2)', borderColor: isLight ? '#C7D2FE' : '#6366F1', borderWidth: 1 }]}>
-                          <Ionicons name="checkmark-done" size={10} color={isLight ? '#4338CA' : '#818CF8'} />
-                          <Text style={[styles.liveText, { color: isLight ? '#4338CA' : '#818CF8' }]}>
-                            LEFT AT {punch.endTime}
-                          </Text>
-                        </View>
-                      ) : status.isOngoing ? (
-                        <View style={styles.livePill}>
-                          <View style={styles.liveDot} />
-                          <Text style={styles.liveText}>LIVE {status.pct}%</Text>
-                        </View>
-                      ) : status.isCompleted ? (
-                        <View style={[styles.livePill, { backgroundColor: isLight ? '#F1F5F9' : 'rgba(100, 116, 139, 0.15)' }]}>
-                          <Ionicons name="checkmark-circle" size={10} color="#64748B" />
-                          <Text style={[styles.liveText, { color: '#64748B' }]}>DONE</Text>
-                        </View>
-                      ) : null}
+                        ) : null}
+                      </View>
                     </View>
 
-                    {/* Subject & Teacher Name */}
-                    <View style={{ marginTop: 2 }}>
-                      <Text style={[styles.periodSubject, { color: colors.textMain, fontSize: 15, fontWeight: '700' }]}>
-                        {item.code}
-                      </Text>
-                      {item.faculty && item.faculty !== '-' ? (
-                        <Text style={{ fontSize: 12, fontWeight: '500', color: isLight ? '#64748B' : '#94A3B8', marginTop: 2, opacity: 0.85 }}>
-                          {item.faculty.replace(/\b(Prof\.|Dr\.|Prof|Dr)\b\s*/gi, '').trim()}
-                        </Text>
-                      ) : null}
-                    </View>
-
-                    {/* Teacher Live Punch Arrival & Departure Timeline Details */}
-                    {isPunchIn && (
-                      <View style={{ marginTop: 6, backgroundColor: 'rgba(16, 185, 129, 0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, alignSelf: 'flex-start' }}>
-                        <Text style={{ fontSize: 11, fontWeight: '700', color: isLight ? '#047857' : '#34D399' }}>
-                          🟢 Arrived: {punch.startTime} {punch.lateMins > 0 ? `(${punch.lateMins} mins late)` : '• On Time!'}
-                        </Text>
-                      </View>
-                    )}
-
-                    {isPunchEnded && (
-                      <View style={{ marginTop: 6, backgroundColor: isLight ? '#EEF2FF' : 'rgba(99, 102, 241, 0.18)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, alignSelf: 'flex-start' }}>
-                        <Text style={{ fontSize: 11, fontWeight: '700', color: isLight ? '#3730A3' : '#A5B4FC' }}>
-                          ⏱️ Duration: {punch.durationMins} mins ({punch.startTime} - {punch.endTime})
-                          {punch.lateMins > 0 ? ` • ${punch.lateMins}m late` : ''}
-                          {punch.earlyMins > 0 ? ` • Left ${punch.earlyMins}m early` : ' • Full session'}
-                        </Text>
-                      </View>
-                    )}
-
-                    {/* Real-time Filling Progress Bar */}
-                    {status.isOngoing && !isPunchIn && !isPunchEnded && (
-                      <View style={{ marginTop: 8, paddingRight: 10 }}>
-                        <View style={{ height: 6, backgroundColor: isLight ? '#A7F3D0' : 'rgba(6, 78, 59, 0.8)', borderRadius: 3, overflow: 'hidden' }}>
-                          <View style={{ height: '100%', width: `${status.pct}%`, backgroundColor: '#10B981', borderRadius: 3 }} />
-                        </View>
-                        <Text style={{ fontSize: 10, color: isLight ? '#047857' : '#34D399', fontWeight: '800', marginTop: 3 }}>
-                          ⚡ {status.pct}% filled • {status.minsRemaining} mins remaining
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-
-                  {/* Actions Column: Live Punch Button, Room Pill, Edit Icon */}
-                  <View style={{ flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-                    {/* Live Punch Play/Pause Icon Button */}
-                    <TouchableOpacity
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 16,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: isPunchIn
-                          ? '#EF4444' // Pause icon (Red button when active)
-                          : isPunchEnded
-                          ? (isLight ? '#E2E8F0' : 'rgba(255, 255, 255, 0.15)')
-                          : '#10B981', // Play icon (Green button to start)
-                      }}
-                      onPress={() => triggerProtectedCRAction({ type: 'punch', data: { day: selectedDay, item, index } })}
-                      activeOpacity={0.8}
-                      title={isPunchIn ? 'Pause Class' : isPunchEnded ? 'Reset' : 'Play Class'}
-                    >
-                      <Ionicons
-                        name={isPunchIn ? 'pause' : isPunchEnded ? 'refresh' : 'play'}
-                        size={15}
-                        color={isPunchEnded ? colors.textSub : '#FFFFFF'}
-                      />
-                    </TouchableOpacity>
-
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                      <View style={[styles.roomPill, { backgroundColor: isLight ? '#FEF3C7' : 'rgba(245, 158, 11, 0.2)', borderColor: isLight ? '#FDE68A' : '#F59E0B' }]}>
-                        <Text style={styles.roomPillText}>Room {item.room}</Text>
-                      </View>
-
+                    {/* Right Actions Column: Play/Pause Button, Room Pill */}
+                    <View style={{ flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+                      {/* Live Punch Play/Pause Icon Button (Deactivated when class is completed) */}
                       <TouchableOpacity
-                        style={[styles.changeRoomIconBtn, { backgroundColor: isLight ? '#EEF2FF' : 'rgba(15, 23, 42, 0.8)', borderColor: colors.glassBorder }]}
-                        onPress={() => triggerProtectedCRAction({ type: 'editRoom', data: { day: selectedDay, index, room: item.room, name: item.name } })}
-                        activeOpacity={0.7}
-                        title="Change Room"
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 16,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: isClassCompleted
+                            ? (isLight ? '#E2E8F0' : 'rgba(255, 255, 255, 0.1)')
+                            : isPunchIn
+                            ? '#F59E0B' // Yellow button when active (Teacher in class)
+                            : '#10B981', // Green button when paused / ready (Teacher out)
+                          opacity: isClassCompleted ? 0.4 : 1,
+                        }}
+                        disabled={isClassCompleted}
+                        onPress={() => triggerProtectedCRAction({ type: 'punch', data: { day: selectedDay, item, index } })}
+                        activeOpacity={0.8}
+                        title={isClassCompleted ? 'Class Completed' : isPunchIn ? 'Pause (Teacher Out)' : 'Play (Teacher In)'}
                       >
-                        <Ionicons name="pencil" size={12} color={colors.primary} />
+                        <Ionicons
+                          name={isClassCompleted ? 'checkmark-circle' : isPunchIn ? 'pause' : 'play'}
+                          size={15}
+                          color={isClassCompleted ? (isLight ? '#94A3B8' : '#64748B') : '#FFFFFF'}
+                        />
                       </TouchableOpacity>
+
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <View style={[styles.roomPill, { backgroundColor: isLight ? '#FEF3C7' : 'rgba(245, 158, 11, 0.2)', borderColor: isLight ? '#FDE68A' : '#F59E0B' }]}>
+                          <Image
+                            source={require('../../assets/classroom_logo.png')}
+                            style={{ width: 14, height: 14, tintColor: isLight ? '#D97706' : '#FBBF24' }}
+                            resizeMode="contain"
+                          />
+                          <Text style={styles.roomPillText}>{item.room.replace(/^Room\s*/i, '')}</Text>
+                        </View>
+
+                        {/* Room edit pencil button (Deactivated / hidden when class is completed) */}
+                        {!isClassCompleted && (
+                          <TouchableOpacity
+                            style={[styles.changeRoomIconBtn, { backgroundColor: isLight ? '#EEF2FF' : 'rgba(15, 23, 42, 0.8)', borderColor: colors.glassBorder }]}
+                            onPress={() => triggerProtectedCRAction({ type: 'editRoom', data: { day: selectedDay, index, room: item.room, name: item.name } })}
+                            activeOpacity={0.7}
+                            title="Change Room"
+                          >
+                            <Ionicons name="pencil" size={12} color={colors.primary} />
+                          </TouchableOpacity>
+                        )}
+                      </View>
                     </View>
                   </View>
+
+                  {/* Bottom Row: Full-width Multi-segment Timeline Progress Bar */}
+                  {(status.isOngoing || isPunchIn || isPunchPaused || isPunchEnded) && timelineData.totalFilledPct > 0 && (
+                    <View style={{ marginTop: (timelineData.popups && timelineData.popups.length > 0) ? 22 : 10, width: '100%', position: 'relative' }}>
+                      
+                      {/* Floating Location Pin Drop Markers on Color Transition Boundaries */}
+                      {timelineData.popups && timelineData.popups.map((pop, pIdx) => (
+                        <View
+                          key={pIdx}
+                          style={{
+                            position: 'absolute',
+                            left: `${Math.min(88, Math.max(12, pop.leftPct))}%`,
+                            top: -20,
+                            transform: [{ translateX: '-50%' }],
+                            backgroundColor: pop.color,
+                            paddingHorizontal: 7,
+                            paddingVertical: 2,
+                            borderRadius: 10,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 3,
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.25,
+                            shadowRadius: 3,
+                            elevation: 5,
+                            zIndex: 20,
+                          }}
+                        >
+                          <Ionicons name="location-sharp" size={10} color="#FFFFFF" />
+                          <Text style={{ fontSize: 10, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.2, whiteSpace: 'nowrap' }}>
+                            {pop.timeStr}
+                          </Text>
+                          {/* Pointer tip arrow sitting directly on the bar */}
+                          <View
+                            style={{
+                              position: 'absolute',
+                              bottom: -4,
+                              left: '50%',
+                              marginLeft: -4,
+                              width: 0,
+                              height: 0,
+                              borderLeftWidth: 4,
+                              borderRightWidth: 4,
+                              borderTopWidth: 4,
+                              borderLeftColor: 'transparent',
+                              borderRightColor: 'transparent',
+                              borderTopColor: pop.color,
+                            }}
+                          />
+                        </View>
+                      ))}
+
+                      {/* Segmented Progress Bar */}
+                      <View style={{ height: 7, backgroundColor: isLight ? '#E2E8F0' : 'rgba(255, 255, 255, 0.12)', borderRadius: 4, overflow: 'hidden', flexDirection: 'row', width: '100%' }}>
+                        {timelineData.segments.map((seg, sIdx) => (
+                          <View
+                            key={sIdx}
+                            style={{
+                              height: '100%',
+                              width: `${seg.widthPct}%`,
+                              backgroundColor: seg.color,
+                            }}
+                          />
+                        ))}
+                      </View>
+
+                      {/* Footer Stats */}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: 5 }}>
+                        <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#475569' : '#94A3B8' }}>
+                          ⚡ {timelineData.totalFilledPct}% filled
+                        </Text>
+                        {timelineData.yellowMins > 0 ? (
+                          <Text style={{ fontSize: 11, fontWeight: '800', color: '#D97706' }}>
+                            • 🟨 Teacher in class: {timelineData.yellowMins}m
+                          </Text>
+                        ) : null}
+                        {timelineData.minsRemaining > 0 ? (
+                          <Text style={{ fontSize: 11, fontWeight: '700', color: isLight ? '#64748B' : '#64748B' }}>
+                            • {timelineData.minsRemaining} mins remaining
+                          </Text>
+                        ) : null}
+                      </View>
+                    </View>
+                  )}
                 </View>
               );
             })}

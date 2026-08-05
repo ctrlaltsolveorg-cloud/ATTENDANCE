@@ -305,9 +305,9 @@ export default function App() {
             <Ionicons
               name={activeTab === 'dashboard' ? 'grid' : 'grid-outline'}
               size={22}
-              color={activeTab === 'dashboard' ? (themeMode === 'light' ? '#4F46E5' : '#C084FC') : '#64748B'}
+              color={activeTab === 'dashboard' ? (themeMode === 'light' ? '#4F46E5' : '#3B82F6') : '#64748B'}
             />
-            <Text style={[styles.tabLabel, activeTab === 'dashboard' && { color: themeMode === 'light' ? '#4F46E5' : '#C084FC', fontWeight: '800' }]}>
+            <Text style={[styles.tabLabel, activeTab === 'dashboard' && { color: themeMode === 'light' ? '#4F46E5' : '#3B82F6', fontWeight: '800' }]}>
               Dashboard
             </Text>
           </TouchableOpacity>
@@ -320,13 +320,13 @@ export default function App() {
             <View
               style={[
                 styles.markIconCircle,
-                { backgroundColor: themeMode === 'light' ? '#4F46E5' : '#A855F7' },
+                { backgroundColor: themeMode === 'light' ? '#4F46E5' : '#2563EB' },
                 activeTab === 'mark' && { transform: [{ scale: 1.08 }] },
               ]}
             >
               <Ionicons name="checkbox-outline" size={22} color="#FFFFFF" />
             </View>
-            <Text style={[styles.tabLabel, activeTab === 'mark' && { color: themeMode === 'light' ? '#4F46E5' : '#C084FC', fontWeight: '800' }]}>
+            <Text style={[styles.tabLabel, activeTab === 'mark' && { color: themeMode === 'light' ? '#4F46E5' : '#3B82F6', fontWeight: '800' }]}>
               Mark Roll
             </Text>
           </TouchableOpacity>
@@ -339,9 +339,9 @@ export default function App() {
             <Ionicons
               name={activeTab === 'students' ? 'people' : 'people-outline'}
               size={22}
-              color={activeTab === 'students' ? (themeMode === 'light' ? '#4F46E5' : '#C084FC') : '#64748B'}
+              color={activeTab === 'students' ? (themeMode === 'light' ? '#4F46E5' : '#3B82F6') : '#64748B'}
             />
-            <Text style={[styles.tabLabel, activeTab === 'students' && { color: themeMode === 'light' ? '#4F46E5' : '#C084FC', fontWeight: '800' }]}>
+            <Text style={[styles.tabLabel, activeTab === 'students' && { color: themeMode === 'light' ? '#4F46E5' : '#3B82F6', fontWeight: '800' }]}>
               Students
             </Text>
           </TouchableOpacity>
@@ -354,9 +354,9 @@ export default function App() {
             <Ionicons
               name={activeTab === 'reports' ? 'document-text' : 'document-text-outline'}
               size={22}
-              color={activeTab === 'reports' ? (themeMode === 'light' ? '#4F46E5' : '#C084FC') : '#64748B'}
+              color={activeTab === 'reports' ? (themeMode === 'light' ? '#4F46E5' : '#3B82F6') : '#64748B'}
             />
-            <Text style={[styles.tabLabel, activeTab === 'reports' && { color: themeMode === 'light' ? '#4F46E5' : '#C084FC', fontWeight: '800' }]}>
+            <Text style={[styles.tabLabel, activeTab === 'reports' && { color: themeMode === 'light' ? '#4F46E5' : '#3B82F6', fontWeight: '800' }]}>
               Reports
             </Text>
           </TouchableOpacity>

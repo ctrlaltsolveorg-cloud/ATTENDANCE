@@ -151,14 +151,14 @@ export default function StudentListScreen({
                   borderRadius: 16,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: isLight ? '#EEF2FF' : 'rgba(168, 85, 247, 0.2)',
-                  borderColor: isLight ? '#C7D2FE' : 'rgba(168, 85, 247, 0.4)',
+                  backgroundColor: isLight ? '#EEF2FF' : 'rgba(30, 41, 59, 0.8)',
+                  borderColor: isLight ? '#C7D2FE' : 'rgba(56, 189, 248, 0.4)',
                   borderWidth: 1,
                 }}
                 onPress={onToggleTheme}
                 activeOpacity={0.7}
               >
-                <Ionicons name={isLight ? 'sunny' : 'moon'} size={16} color={isLight ? '#4F46E5' : '#C084FC'} />
+                <Ionicons name={isLight ? 'sunny' : 'moon'} size={16} color={isLight ? '#4F46E5' : '#38BDF8'} />
               </TouchableOpacity>
             )}
 
